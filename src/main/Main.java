@@ -1,52 +1,51 @@
 package main;
 
 import javax.sound.midi.*;
+
+
+import java.io.File;
 import java.util.*;
 
 public class Main {
 
 	public static void main(String[] args) {
-		System.out.println("Enter the number of notes to be played: ");
-        Scanner in = new Scanner(System.in);
-        int numOfNotes = in.nextInt();
- 
-        setUpPlayer(numOfNotes);
-
-	}
-	
-	
-	
-    static public void setUpPlayer(int numOfNotes)
-    {
  
         try {
  
             // A static method of MidiSystem that returns
             // a sequencer instance.
-            Sequencer sequencer = MidiSystem.getSequencer();
+        	
+        	Sequencer sequencer = MidiSystem.getSequencer();
+     //       Sequencer sequencer = MidiSystem.getMidiDeviceInfo()[0].;
+            for (MidiDevice.Info i : MidiSystem.getMidiDeviceInfo()) {
+				
+            	System.out.println(i.toString() + i.getDescription() + i.getVersion());
+			}
+            System.out.println(sequencer.getDeviceInfo());
             sequencer.open();
  
             // Creating a sequence.
-            Sequence sequence = new Sequence(Sequence.PPQ, 4);
+            //Sequence sequence = new Sequence(Sequence.PPQ, 4);
+            Sequence sequence = MidiSystem.getSequence(new File("haydn_symphony_100_2.mid"));
  
             // PPQ(Pulse per ticks) is used to specify timing
             // type and 4 is the timing resolution.
  
             // Creating a track on our sequence upon which
             // MIDI events would be placed
-            Track track = sequence.createTrack();
+            //Track track = sequence.createTrack();
             
  
                 // Adding some events to the track
-                for (int i = 5; i < (4 * numOfNotes) + 5; i += 4)
-            {
- 
-                // Add Note On event
-                track.add(makeEvent(144, 1, i, 100, i));
- 
-                // Add Note Off event
-                track.add(makeEvent(128, 1, i, 100, i + 2));
-            }
+//                for (int i = 5; i < (4 * numOfNotes) + 5; i += 4)
+//            {
+// 
+//                // Add Note On event
+//                track.add(makeEvent(144, 1, i, 100, i));
+// 
+//                // Add Note Off event
+//                track.add(makeEvent(128, 1, i, 100, i + 2));
+//            }
  
             // Setting our sequence so that the sequencer can
             // run it on synthesizer
@@ -58,14 +57,17 @@ public class Main {
             // Sequencer starts to play notes
             sequencer.start();
  
-            while (true) {
- 
-                // Exit the program when sequencer has stopped playing.
-                if (!sequencer.isRunning()) {
-                    sequencer.close();
-                    System.exit(1);
-                }
-            }
+            
+
+    		try {
+    			while(sequencer.isRunning()) {
+    				Thread.sleep(10);
+    			}
+    		} catch (InterruptedException e) {
+    			// TODO Auto-generated catch block
+    			e.printStackTrace();
+    		}
+            sequencer.close();
         }
         catch (Exception ex) {
  
