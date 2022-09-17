@@ -7,6 +7,8 @@ import javax.sound.midi.Transmitter;
 import javax.swing.JFrame;
 import javax.swing.Timer;
 
+import java.awt.event.WindowAdapter;
+import java.awt.event.WindowEvent;
 import java.io.File;
 
 public class Main {
@@ -17,28 +19,40 @@ public class Main {
 	    System.setProperty("sun.java2d.opengl", "true");
  
         try {
-        	
+        	// https://docs.oracle.com/javase/tutorial/sound/overview-MIDI.html
         	Sequencer sequencer = MidiSystem.getSequencer();
             sequencer.open();
             Sequence sequence = MidiSystem.getSequence(new File("haydn_symphony_100_2.mid"));
             sequencer.setSequence(sequence);
-            Transmitter tr = sequencer.getTransmitter();
-    		Roll r = new Roll();
-    		tr.setReceiver(r);
+            Transmitter transmitter = sequencer.getTransmitter();
+    		Roll roll = new Roll();
+    		transmitter.setReceiver(roll);
             sequencer.start();
  
 
             JFrame frame = new JFrame("Synthesijava");
-            frame.add(r);
             frame.setSize(1280, 720);
-            frame.setVisible(true);
+            frame.add(roll);
             frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+            frame.setVisible(true);
 
+
+            // https://stackoverflow.com/questions/5824049/running-a-method-when-closing-the-program
+            frame.addWindowListener(new WindowAdapter() {
+                public void windowClosing(WindowEvent we) {
+                	//System.out.println("záródunk");
+            		transmitter.close();
+                	sequencer.close();
+                }
+            });
             
-
+            // https://stackoverflow.com/questions/57948299/why-does-my-custom-swing-component-repaint-faster-when-i-move-the-mouse-java
             /* Update the scene every 40 milliseconds. */
-            Timer timer = new Timer(16, (e) -> r.repaint());
+            Timer timer = new Timer(10, (e) -> roll.repaint());
             timer.start();
+            
+            //while (true)
+            //	roll.repaint();
             
 //			while(sequencer.isRunning()) {
 //				frame.getContentPane().repaint();
