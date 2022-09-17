@@ -28,6 +28,7 @@ public class Roll extends JPanel implements Receiver {
 		int channel = sm.getChannel();
 		int pitch = sm.getData1();
 		int volume = sm.getData2();
+		// lezárni az előző hangot, ha van
 		if (currentlyPressed[channel][pitch] != null) {
 			currentlyPressed[channel][pitch].setEnd();
 			currentlyPressed[channel][pitch] = null;
@@ -44,14 +45,12 @@ public class Roll extends JPanel implements Receiver {
 	}
 	
 	@Override
-	public void paint(Graphics g) {
-		g.clearRect(0, 0, 1280, 720);
+	protected void paintComponent(Graphics g) {
+	    super.paintComponent(g);
 		g.setColor(Color.BLUE);
 		for (Iterator<Note> iterator = notes.iterator(); iterator.hasNext();) {
 			iterator.next().paint(g);
 		}
-		revalidate();
 	}
-	//public void paintComponent(Graphics g) {}
 
 }
