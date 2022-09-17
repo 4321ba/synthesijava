@@ -1,10 +1,9 @@
 package main;
 
 //import java.awt.Canvas;
-import java.awt.Color;
 import java.awt.Graphics;
-import java.util.HashSet;
 import java.util.Iterator;
+import java.util.LinkedHashSet;
 import java.util.Set;
 
 import javax.sound.midi.MidiMessage;
@@ -18,14 +17,8 @@ public class Roll extends JPanel implements Receiver {
 	static final int MAX_CHANNELS = 16;
 	static final int MAX_PITCHES = 128;
 	
-	@SuppressWarnings("unchecked")
-	Set<Note>[] notes = (HashSet<Note>[])new HashSet[MAX_CHANNELS];
+	Set<Note> notes = new LinkedHashSet<Note>();
 	Note[][] currentlyPressed = new Note[MAX_CHANNELS][MAX_PITCHES];
-	
-	public Roll() {
-		for (int i = 0; i < notes.length; ++i)
-			notes[i] = new HashSet<Note>();
-	}
 	
 	@Override
 	public void send(MidiMessage message, long timeStamp) {
@@ -43,8 +36,8 @@ public class Roll extends JPanel implements Receiver {
 			currentlyPressed[channel][pitch] = null;
 		}
 		if (sm.getCommand() == ShortMessage.NOTE_ON && volume != 0) { // note on 0-s hangerővel igazából note offnak számít
-			Note n = new Note(pitch, volume);
-			notes[channel].add(n);
+			Note n = new Note(pitch, volume, channel);
+			notes.add(n);
 			currentlyPressed[channel][pitch] = n;
 		}
 	}
@@ -56,16 +49,9 @@ public class Roll extends JPanel implements Receiver {
 	@Override
 	protected void paintComponent(Graphics g) {
 	    super.paintComponent(g);
-	    int i = 0;
-		for (Set<Note> channelNotes : notes) {
-			Color c = new Color(Color.HSBtoRGB(i/16.0f, 1.0f, 1.0f));
-			for (Iterator<Note> it = channelNotes.iterator(); it.hasNext();) {
-				Note note = it.next();
-				Color calphaval = new Color(c.getRed(), c.getGreen(), c.getBlue(), note.volume + 128);
-				g.setColor(calphaval);
-				note.paint(g);
-			}
-			++i;
+		for (Iterator<Note> it = notes.iterator(); it.hasNext();) {
+			Note note = it.next();
+			note.paint(g);
 		}
 	}
 
