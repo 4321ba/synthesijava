@@ -5,6 +5,7 @@ import javax.sound.midi.MidiSystem;
 import javax.sound.midi.Receiver;
 import javax.sound.midi.Sequence;
 import javax.sound.midi.Sequencer;
+import javax.sound.midi.Synthesizer;
 import javax.sound.midi.Transmitter;
 import javax.swing.*;
 
@@ -20,10 +21,11 @@ import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 import java.io.File;
 import java.io.IOException;
+import java.net.URISyntaxException;
 
 public class Main {
 
-	static JMenuBar createMenuBar() {
+	static JMenuBar createMenuBar(Sequencer sequencer) {
         // https://docs.oracle.com/javase/tutorial/uiswing/components/menu.html
 
 		JMenuBar menuBar = new JMenuBar();
@@ -33,30 +35,9 @@ public class Main {
 			fileMenu.setMnemonic(KeyEvent.VK_F);
 			menuBar.add(fileMenu);
 
-			// https://docs.oracle.com/javase/tutorial/uiswing/components/filechooser.html
-			// https://stackoverflow.com/questions/891380/java-anonymous-class-that-implements-actionlistener
-			JFileChooser midiChooser = new JFileChooser();
-			JFileChooser pianoChooser = new JFileChooser();
-
 			JMenuItem openMidiButton = new JMenuItem("Open MIDI", KeyEvent.VK_O);
 			openMidiButton.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_O, ActionEvent.CTRL_MASK));
-			openMidiButton.addActionListener(new MidiFileChooser());
-			openMidiButton.addActionListener(new ActionListener() {
-				@Override public void actionPerformed(ActionEvent event) {
-					// a file chooser megjelenítése:
-		            if (midiChooser.showOpenDialog(null) == JFileChooser.APPROVE_OPTION) {
-		            	try {
-							MidiSystem.getSequence(midiChooser.getSelectedFile());
-			            	JOptionPane.showMessageDialog(null, "File successfully loaded.");
-						} catch (IOException e) {
-							// https://www.baeldung.com/java-concat-null-string
-							JOptionPane.showMessageDialog(null, "Error while loading file: " + e.getMessage() + ".");
-						} catch (InvalidMidiDataException e) {
-							JOptionPane.showMessageDialog(null, "Invalid MIDI file: " + e.getMessage() + ".");
-						}
-		            }
-				}
-			});
+			openMidiButton.addActionListener(new MidiFileChooser(sequencer));
 			fileMenu.add(openMidiButton);
 			
 			fileMenu.addSeparator();
@@ -76,6 +57,7 @@ public class Main {
 			
 			JMenuItem startStopButton = new JMenuItem("Start / Stop", KeyEvent.VK_S);
 			startStopButton.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_SPACE, 0));
+			startStopButton.addActionListener(new StartStopListener(sequencer));
 			playbackMenu.add(startStopButton);
 			
 			playbackMenu.addSeparator();
@@ -97,9 +79,9 @@ public class Main {
 			midiFileSourceButton.setSelected(true);
 			sourceButtonGroup.add(midiFileSourceButton);
 			modeMenu.add(midiFileSourceButton);
-			JRadioButtonMenuItem midiInputSourceButton = new JRadioButtonMenuItem("External MIDI device source");
-			midiInputSourceButton.setMnemonic(KeyEvent.VK_E);
-			midiInputSourceButton.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_E, ActionEvent.CTRL_MASK));
+			JRadioButtonMenuItem midiInputSourceButton = new JRadioButtonMenuItem("Realtime MIDI device source");
+			midiInputSourceButton.setMnemonic(KeyEvent.VK_R);
+			midiInputSourceButton.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_R, ActionEvent.CTRL_MASK));
 			sourceButtonGroup.add(midiInputSourceButton);
 			modeMenu.add(midiInputSourceButton);
 			
@@ -126,7 +108,22 @@ public class Main {
 			
 			JMenuItem aboutButton = new JMenuItem("About Synthesijava", KeyEvent.VK_A);
 			aboutMenu.add(aboutButton);
+			aboutButton.addActionListener(new ActionListener() {
+				@Override public void actionPerformed(ActionEvent event) {
+					JOptionPane.showMessageDialog(null, "Dev version.\nMade by 4321ba for the university subject Programming 3 at BME.\nUses the Java standard library.", "About", JOptionPane.INFORMATION_MESSAGE);
+				}
+			});
 			JMenuItem sourceCodeButton = new JMenuItem("Source code", KeyEvent.VK_S);
+			sourceCodeButton.addActionListener(new ActionListener() {
+				@Override public void actionPerformed(ActionEvent event) {
+					try {
+						// https://stackoverflow.com/questions/748895/how-do-you-open-web-pages-in-java
+						java.awt.Desktop.getDesktop().browse(new java.net.URI("https://github.com/4321ba/synthesijava"));
+					} catch (IOException | URISyntaxException e) {
+						JOptionPane.showMessageDialog(null, "Could not open the webpage https://github.com/4321ba/synthesijava: " + e.getMessage() + ".", "Error", JOptionPane.ERROR_MESSAGE);
+					}
+				}
+			});
 			aboutMenu.add(sourceCodeButton);
 		}
 		
@@ -145,20 +142,17 @@ public class Main {
         	Sequencer sequencer = MidiSystem.getSequencer();
         	//Transmitter trin = MidiSystem.getTransmitter();
             sequencer.open();
-            Sequence sequence = MidiSystem.getSequence(new File("haydn_symphony_100_2.mid"));
-            sequencer.setSequence(sequence);
             //trin.setReceiver(sequencer.getReceiver());
             Transmitter transmitter = sequencer.getTransmitter();
     		Roll roll = new Roll();
     		transmitter.setReceiver(roll);
-            sequencer.start();
 
         	//trin.setReceiver(roll);
             // TODO thread safety???
             JFrame frame = new JFrame("Synthesijava");
             frame.setSize(1280, 720);
             frame.setMinimumSize(new Dimension(320, 240));
-            frame.setJMenuBar(createMenuBar());
+            frame.setJMenuBar(createMenuBar(sequencer));
             frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 
             // https://docs.oracle.com/javase/tutorial/uiswing/layout/box.html
@@ -185,7 +179,16 @@ public class Main {
             pane.add(roll, rconstraint);
 
             frame.setVisible(true);
+            piano.grabFocus();
 
+            Synthesizer defs = MidiSystem.getSynthesizer();
+            Receiver defSynth = defs.getReceiver();
+            defs.open();
+            System.out.println(defs.isOpen());
+            Splitter spl = new Splitter();
+            piano.setReceiver(spl);//TODO nem szabad elvileg 2 transmitternek uazt a receivert hívogatnia
+            spl.newTransmitter().setReceiver(defSynth);
+            spl.newTransmitter().setReceiver(roll);
             
             // https://stackoverflow.com/questions/5824049/running-a-method-when-closing-the-program
             frame.addWindowListener(new WindowAdapter() {
