@@ -1,12 +1,12 @@
 package main;
 
+import javax.sound.midi.InvalidMidiDataException;
 import javax.sound.midi.MidiSystem;
 import javax.sound.midi.Receiver;
 import javax.sound.midi.Sequence;
 import javax.sound.midi.Sequencer;
 import javax.sound.midi.Transmitter;
 import javax.swing.*;
-import javax.swing.Timer;
 
 import java.awt.BorderLayout;
 import java.awt.Container;
@@ -14,15 +14,17 @@ import java.awt.Dimension;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
 import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
 import java.awt.event.KeyEvent;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 import java.io.File;
+import java.io.IOException;
 
 public class Main {
 
 	static JMenuBar createMenuBar() {
-        // https://docs.oracle.com/javase/tutorial/uiswing/components/menu.htm
+        // https://docs.oracle.com/javase/tutorial/uiswing/components/menu.html
 
 		JMenuBar menuBar = new JMenuBar();
 
@@ -30,9 +32,31 @@ public class Main {
 			JMenu fileMenu = new JMenu("File");
 			fileMenu.setMnemonic(KeyEvent.VK_F);
 			menuBar.add(fileMenu);
-			
+
+			// https://docs.oracle.com/javase/tutorial/uiswing/components/filechooser.html
+			// https://stackoverflow.com/questions/891380/java-anonymous-class-that-implements-actionlistener
+			JFileChooser midiChooser = new JFileChooser();
+			JFileChooser pianoChooser = new JFileChooser();
+
 			JMenuItem openMidiButton = new JMenuItem("Open MIDI", KeyEvent.VK_O);
 			openMidiButton.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_O, ActionEvent.CTRL_MASK));
+			openMidiButton.addActionListener(new MidiFileChooser());
+			openMidiButton.addActionListener(new ActionListener() {
+				@Override public void actionPerformed(ActionEvent event) {
+					// a file chooser megjelenítése:
+		            if (midiChooser.showOpenDialog(null) == JFileChooser.APPROVE_OPTION) {
+		            	try {
+							MidiSystem.getSequence(midiChooser.getSelectedFile());
+			            	JOptionPane.showMessageDialog(null, "File successfully loaded.");
+						} catch (IOException e) {
+							// https://www.baeldung.com/java-concat-null-string
+							JOptionPane.showMessageDialog(null, "Error while loading file: " + e.getMessage() + ".");
+						} catch (InvalidMidiDataException e) {
+							JOptionPane.showMessageDialog(null, "Invalid MIDI file: " + e.getMessage() + ".");
+						}
+		            }
+				}
+			});
 			fileMenu.add(openMidiButton);
 			
 			fileMenu.addSeparator();
@@ -130,7 +154,7 @@ public class Main {
             sequencer.start();
 
         	//trin.setReceiver(roll);
-
+            // TODO thread safety???
             JFrame frame = new JFrame("Synthesijava");
             frame.setSize(1280, 720);
             frame.setMinimumSize(new Dimension(320, 240));
