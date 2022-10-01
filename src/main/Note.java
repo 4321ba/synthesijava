@@ -19,14 +19,21 @@ public class Note {
 	void setEnd() {
 		end = System.currentTimeMillis();
 	}
-	void paint(Graphics g) {
+	
+	public static Color getNoteColor(int pitch, int volume, int channel) {
+		//long currt = System.currentTimeMillis();
+		//Color c = new Color(Color.HSBtoRGB((channel/16.0f + (currt%1000)/1000.0f)-(long)(channel/16.0f + (currt%1000)/1000.0f), 1.0f, 1.0f));
 		Color c = new Color(Color.HSBtoRGB(channel/16.0f, 1.0f, 1.0f));
 		Color calphaval = new Color(c.getRed(), c.getGreen(), c.getBlue(), volume + 128);
-		g.setColor(calphaval);
+		return calphaval;
+	}
+	
+	void paint(Graphics g, int width) {
+		g.setColor(getNoteColor(pitch, volume, channel));
 		
 		long currt = System.currentTimeMillis();
 		long newend = end == -1 ? currt : end;
-		g.fillRect(10*pitch, (int)((currt-newend)/10), 10, (int)((newend-begin) / 10));
+		g.fillRect(width*pitch/128, (int)((currt-newend)/10), width/128, (int)((newend-begin) / 10));
 		//System.out.printf("%d %d %d %d\n", 10*pitch, (int)((currt-begin)/30), 10, (int)((newend-begin) / 30));
 	}
 }

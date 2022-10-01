@@ -1,7 +1,9 @@
 package main;
 
+import java.awt.Dimension;
 //import java.awt.Canvas;
 import java.awt.Graphics;
+import java.util.ConcurrentModificationException;
 import java.util.Iterator;
 import java.util.LinkedHashSet;
 import java.util.Set;
@@ -46,12 +48,18 @@ public class Roll extends JPanel implements Receiver {
 	public void close() {
 	}
 	
+	// https://www.oracle.com/java/technologies/painting.html
 	@Override
 	protected void paintComponent(Graphics g) {
 	    super.paintComponent(g);
-		for (Iterator<Note> it = notes.iterator(); it.hasNext();) {
-			Note note = it.next();
-			note.paint(g);
+	    Dimension size = getSize();
+	    try { // TODO
+			for (Iterator<Note> it = notes.iterator(); it.hasNext();) {
+				Note note = it.next();
+				note.paint(g, size.width);
+			}
+		} catch (ConcurrentModificationException e) {
+			System.err.println("CME caught");
 		}
 	}
 

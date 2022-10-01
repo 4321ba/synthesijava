@@ -1,18 +1,114 @@
 package main;
 
 import javax.sound.midi.MidiSystem;
+import javax.sound.midi.Receiver;
 import javax.sound.midi.Sequence;
 import javax.sound.midi.Sequencer;
 import javax.sound.midi.Transmitter;
-import javax.swing.JFrame;
+import javax.swing.*;
 import javax.swing.Timer;
 
+import java.awt.BorderLayout;
+import java.awt.Container;
+import java.awt.Dimension;
+import java.awt.GridBagConstraints;
+import java.awt.GridBagLayout;
+import java.awt.event.ActionEvent;
+import java.awt.event.KeyEvent;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 import java.io.File;
 
 public class Main {
 
+	static JMenuBar createMenuBar() {
+        // https://docs.oracle.com/javase/tutorial/uiswing/components/menu.htm
+
+		JMenuBar menuBar = new JMenuBar();
+
+		{ // File menu
+			JMenu fileMenu = new JMenu("File");
+			fileMenu.setMnemonic(KeyEvent.VK_F);
+			menuBar.add(fileMenu);
+			
+			JMenuItem openMidiButton = new JMenuItem("Open MIDI", KeyEvent.VK_O);
+			openMidiButton.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_O, ActionEvent.CTRL_MASK));
+			fileMenu.add(openMidiButton);
+			
+			fileMenu.addSeparator();
+
+			JMenuItem loadPianoButton = new JMenuItem("Load piano settings", KeyEvent.VK_L);
+			loadPianoButton.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_L, ActionEvent.CTRL_MASK));
+			fileMenu.add(loadPianoButton);
+			JMenuItem savePianoButton = new JMenuItem("Save piano settings", KeyEvent.VK_S);
+			savePianoButton.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_S, ActionEvent.CTRL_MASK));
+			fileMenu.add(savePianoButton);
+		}
+		
+		{ // Playback menu
+			JMenu playbackMenu = new JMenu("Playback");
+			playbackMenu.setMnemonic(KeyEvent.VK_P);
+			menuBar.add(playbackMenu);
+			
+			JMenuItem startStopButton = new JMenuItem("Start / Stop", KeyEvent.VK_S);
+			startStopButton.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_SPACE, 0));
+			playbackMenu.add(startStopButton);
+			
+			playbackMenu.addSeparator();
+
+			JMenuItem externalDeviceButton = new JMenuItem("Connect / Disconnect external MIDI device", KeyEvent.VK_C);
+			externalDeviceButton.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_C, ActionEvent.CTRL_MASK));
+			playbackMenu.add(externalDeviceButton);
+		}
+
+		{ // Mode menu
+			JMenu modeMenu = new JMenu("Mode");
+			modeMenu.setMnemonic(KeyEvent.VK_M);
+			menuBar.add(modeMenu);
+			
+			ButtonGroup sourceButtonGroup = new ButtonGroup();
+			JRadioButtonMenuItem midiFileSourceButton = new JRadioButtonMenuItem("MIDI file source");
+			midiFileSourceButton.setMnemonic(KeyEvent.VK_F);
+			midiFileSourceButton.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_F, ActionEvent.CTRL_MASK));
+			midiFileSourceButton.setSelected(true);
+			sourceButtonGroup.add(midiFileSourceButton);
+			modeMenu.add(midiFileSourceButton);
+			JRadioButtonMenuItem midiInputSourceButton = new JRadioButtonMenuItem("External MIDI device source");
+			midiInputSourceButton.setMnemonic(KeyEvent.VK_E);
+			midiInputSourceButton.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_E, ActionEvent.CTRL_MASK));
+			sourceButtonGroup.add(midiInputSourceButton);
+			modeMenu.add(midiInputSourceButton);
+			
+			modeMenu.addSeparator();
+			
+			ButtonGroup directionButtonGroup = new ButtonGroup();
+			JRadioButtonMenuItem upwardsDirectionButton = new JRadioButtonMenuItem("Notes fly upwards");
+			upwardsDirectionButton.setMnemonic(KeyEvent.VK_U);
+			upwardsDirectionButton.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_U, ActionEvent.CTRL_MASK));
+			upwardsDirectionButton.setSelected(true);
+			directionButtonGroup.add(upwardsDirectionButton);
+			modeMenu.add(upwardsDirectionButton);
+			JRadioButtonMenuItem downwardsDirectionButton = new JRadioButtonMenuItem("Notes fall downwards");
+			downwardsDirectionButton.setMnemonic(KeyEvent.VK_D);
+			downwardsDirectionButton.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_D, ActionEvent.CTRL_MASK));
+			directionButtonGroup.add(downwardsDirectionButton);
+			modeMenu.add(downwardsDirectionButton);
+		}
+		
+		{ // About menu
+			JMenu aboutMenu = new JMenu("About");
+			aboutMenu.setMnemonic(KeyEvent.VK_A);
+			menuBar.add(aboutMenu);
+			
+			JMenuItem aboutButton = new JMenuItem("About Synthesijava", KeyEvent.VK_A);
+			aboutMenu.add(aboutButton);
+			JMenuItem sourceCodeButton = new JMenuItem("Source code", KeyEvent.VK_S);
+			aboutMenu.add(sourceCodeButton);
+		}
+		
+		return menuBar;
+	}
+	
 	public static void main(String[] args) {
 		// bekapcsolni a hardware accelerationt, mert linuxon valamiért alapértelmezetten nincs
 		// https://stackoverflow.com/questions/41001623/java-animation-programs-running-jerky-in-linux/41002553#41002553https://stackoverflow.com/questions/41001623/java-animation-programs-running-jerky-in-linux/41002553#41002553
@@ -20,27 +116,58 @@ public class Main {
  
         try {
         	// https://docs.oracle.com/javase/tutorial/sound/overview-MIDI.html
+        	
+        	
         	Sequencer sequencer = MidiSystem.getSequencer();
+        	//Transmitter trin = MidiSystem.getTransmitter();
             sequencer.open();
             Sequence sequence = MidiSystem.getSequence(new File("haydn_symphony_100_2.mid"));
             sequencer.setSequence(sequence);
+            //trin.setReceiver(sequencer.getReceiver());
             Transmitter transmitter = sequencer.getTransmitter();
     		Roll roll = new Roll();
     		transmitter.setReceiver(roll);
             sequencer.start();
- 
+
+        	//trin.setReceiver(roll);
 
             JFrame frame = new JFrame("Synthesijava");
             frame.setSize(1280, 720);
-            frame.add(roll);
+            frame.setMinimumSize(new Dimension(320, 240));
+            frame.setJMenuBar(createMenuBar());
             frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+
+            // https://docs.oracle.com/javase/tutorial/uiswing/layout/box.html
+            // https://docs.oracle.com/javase/tutorial/uiswing/examples/layout/BoxLayoutDemoProject/src/layout/BoxLayoutDemo.java
+            // https://stackoverflow.com/questions/19745559/java-swing-boxlayout-having-panels-of-different-sizes-ratio-to-each-other
+            // https://stackoverflow.com/questions/2432839/what-is-the-relation-between-contentpane-and-jpanel
+            // https://docs.oracle.com/javase/tutorial/uiswing/layout/gridbag.html
+            Container pane = frame.getContentPane();
+            pane.setLayout(new GridBagLayout());
+            Piano piano = new Piano();
+            GridBagConstraints pconstraint = new GridBagConstraints();
+            pconstraint.weightx = 1.0;
+            pconstraint.weighty = 1.0;
+            pconstraint.fill = GridBagConstraints.BOTH;
+            pconstraint.gridx = 0;
+            pconstraint.gridy = 0;
+            pane.add(piano, pconstraint);
+            GridBagConstraints rconstraint = new GridBagConstraints();
+            rconstraint.weightx = 1.0;
+            rconstraint.weighty = 7.0;
+            rconstraint.fill = GridBagConstraints.BOTH;
+            rconstraint.gridx = 0;
+            rconstraint.gridy = 1;
+            pane.add(roll, rconstraint);
+
             frame.setVisible(true);
 
-
+            
             // https://stackoverflow.com/questions/5824049/running-a-method-when-closing-the-program
             frame.addWindowListener(new WindowAdapter() {
                 public void windowClosing(WindowEvent we) {
                 	//System.out.println("záródunk");
+                	//trin.close();
             		transmitter.close();
                 	sequencer.close();
                 }
@@ -48,7 +175,7 @@ public class Main {
             
             // https://stackoverflow.com/questions/57948299/why-does-my-custom-swing-component-repaint-faster-when-i-move-the-mouse-java
             /* Update the scene every 40 milliseconds. */
-            Timer timer = new Timer(10, (e) -> roll.repaint());
+            Timer timer = new Timer(17, (e) -> roll.repaint());
             timer.start();
             
             //while (true)
