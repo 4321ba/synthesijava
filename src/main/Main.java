@@ -110,6 +110,7 @@ public class Main {
 			aboutMenu.add(aboutButton);
 			aboutButton.addActionListener(new ActionListener() {
 				@Override public void actionPerformed(ActionEvent event) {
+					// https://stackoverflow.com/questions/9119481/how-to-present-a-simple-alert-message-in-java
 					JOptionPane.showMessageDialog(null, "Dev version.\nMade by 4321ba for the university subject Programming 3 at BME.\nUses the Java standard library.", "About", JOptionPane.INFORMATION_MESSAGE);
 				}
 			});

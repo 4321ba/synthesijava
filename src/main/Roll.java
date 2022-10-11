@@ -39,7 +39,9 @@ public class Roll extends JPanel implements Receiver {
 		}
 		if (sm.getCommand() == ShortMessage.NOTE_ON && volume != 0) { // note on 0-s hangerővel igazából note offnak számít
 			Note n = new Note(pitch, volume, channel);
-			notes.add(n);
+			synchronized (notes) {
+				notes.add(n);
+			}
 			currentlyPressed[channel][pitch] = n;
 		}
 	}
@@ -54,9 +56,11 @@ public class Roll extends JPanel implements Receiver {
 	    super.paintComponent(g);
 	    Dimension size = getSize();
 	    try { // TODO
-			for (Iterator<Note> it = notes.iterator(); it.hasNext();) {
-				Note note = it.next();
-				note.paint(g, size.width);
+	    	synchronized (notes) {
+	    		for (Iterator<Note> it = notes.iterator(); it.hasNext();) {
+	    			Note note = it.next();
+	    			note.paint(g, size.width);
+	    		}
 			}
 		} catch (ConcurrentModificationException e) {
 			System.err.println("CME caught");

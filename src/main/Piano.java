@@ -105,8 +105,9 @@ public class Piano extends JPanel implements Receiver, Transmitter, KeyEventDisp
 	public static boolean isBlackNote(int note) {
 		return note % 12 == 1 || note % 12 == 3 || note % 12 == 6 || note % 12 == 8 || note % 12 == 10;
 	}
-	public static boolean isNoteCorF(int note) {
-		return note % 12 == 0 || note % 12 == 5;
+	public static String getNoteName(int note) {
+		final String[] names = "C,C#,D,D#,E,F,F#,G,G#,A,A#,B".split(",");
+		return names[note % 12];
 	}
 	
 	@Override
@@ -117,15 +118,28 @@ public class Piano extends JPanel implements Receiver, Transmitter, KeyEventDisp
 	    g.drawRect(0, 0, size.width - 1, size.height - 1);
 	    int noteCount = highestNoteDisplayed - lowestNoteDisplayed;
 	    for (int absoluteNote = lowestNoteDisplayed; absoluteNote < highestNoteDisplayed; ++absoluteNote) {
+	    	String noteName = getNoteName(absoluteNote);
 	    	int relativeNote = absoluteNote - lowestNoteDisplayed;
 	    	int beginPixel = ((size.width-1) * relativeNote) / noteCount;
 	    	int endPixel = ((size.width-1) * (relativeNote + 1)) / noteCount;
-	    	int middlePixel = ((size.width-1) * (relativeNote * 2 + 1)) / (noteCount * 2);
+//	    	int middlePixel = ((size.width-1) * (relativeNote * 2 + 1)) / (noteCount * 2);
 
 		    g.setColor(Color.BLACK);
-	    	if (isNoteCorF(absoluteNote))
+	    	if (noteName.equals("C") || noteName.equals("F"))
 	    		g.drawLine(beginPixel, 0, beginPixel, size.height - 1);
 	    	if (isBlackNote(absoluteNote)) {
+	    		double lerpWeight = 1/2.0;
+	    		if (noteName.equals("C#"))
+	    			lerpWeight = 1/3.0;
+	    		if (noteName.equals("D#"))
+	    			lerpWeight = 2/3.0;
+	    		if (noteName.equals("F#"))
+	    			lerpWeight = 1/4.0;
+	    		if (noteName.equals("G#"))
+	    			lerpWeight = 1/2.0;
+	    		if (noteName.equals("A#"))
+	    			lerpWeight = 3/4.0;
+	    		int middlePixel = (int)(lerpWeight * beginPixel + (1 - lerpWeight) * endPixel + 0.5);
 	    		g.fillRect(beginPixel, 0, endPixel - beginPixel, (int)(size.height * 0.7));
     			g.drawLine(middlePixel, 0, middlePixel, size.height - 1);
     		    g.setColor(Color.WHITE);
