@@ -11,7 +11,7 @@ import javax.sound.midi.ShortMessage;
 import javax.sound.midi.Transmitter;
 
 public class KeyboardMIDIInput implements Transmitter, KeyListener {
-	static final char[] noteToKey = new char[Piano.MAXNOTES];
+	static final char[] noteToKey = new char[Roll.MAX_PITCHES];
 	static {
 		noteToKey[43] = '0'; // G
 		noteToKey[44] = '1'; // gisz
@@ -59,24 +59,32 @@ public class KeyboardMIDIInput implements Transmitter, KeyListener {
 	}
 	static final Map<Character, Integer> keyToNote = new HashMap<>();
 	static {
-		for (int note = 0; note < Piano.MAXNOTES; ++note)
+		for (int note = 0; note < Roll.MAX_PITCHES; ++note)
 			if (noteToKey[note] != '\0')
 				keyToNote.put(noteToKey[note], note);
 	}
+	//TODO többi osztálynál is privát tagok
+	private boolean[] isNotePressed = new boolean[Roll.MAX_PITCHES];
+	
 
 	// KeyListener implementációjához:
-	@Override public void keyTyped(KeyEvent e) { }
+	@Override
+	public void keyTyped(KeyEvent e) { }
 
 	@Override
 	public void keyPressed(KeyEvent e) {
-		// TODO Auto-generated method stub
-		System.out.println("Pressed "+e.getKeyChar());
-		Integer note = keyToNote.get(e.getKeyChar());
-		if (note != null) {
-			try { // TODO npe???
+		if (e.getModifiersEx() != 0)
+			return;
+		// Sajnos ez csak magyar layouttal működik, de az enkapszuláció örömteli beteljesedése miatt
+		// nem kaphatom meg a nyers billentyűkódot, engem ugyanis nem a karakter érdekelne, hanem a billentyű pozíciója a billentyűzeten.
+		// Ezt viszont elrejtik előlem (mondjuk platformfüggő is valszeg). See: KeyEvent.rawCode
+		char actual = Character.toLowerCase((char)e.getExtendedKeyCode());
+		Integer note = keyToNote.get(actual);
+		if (note != null && !isNotePressed[note]) { // az echo ellen, ha már nem tudtam máshogy megkülönböztetni
+			try {
 				receiver.send(new ShortMessage(ShortMessage.NOTE_ON, 0, note, 127), -1l);
+				isNotePressed[note] = true;
 			} catch (InvalidMidiDataException e1) {
-				// TODO Auto-generated catch block
 				e1.printStackTrace();
 			}
 		}
@@ -84,14 +92,13 @@ public class KeyboardMIDIInput implements Transmitter, KeyListener {
 
 	@Override
 	public void keyReleased(KeyEvent e) {
-		// TODO Auto-generated method stub
-		System.out.println("Released "+e.getKeyChar());
-		Integer note = keyToNote.get(e.getKeyChar());
-		if (note != null) {
-			try { // TODO npe???
-				receiver.send(new ShortMessage(ShortMessage.NOTE_OFF, 0, note, 127), -1l);
+		char actual = Character.toLowerCase((char)e.getExtendedKeyCode());
+		Integer note = keyToNote.get(actual);
+		if (note != null && isNotePressed[note]) {
+			try {
+				receiver.send(new ShortMessage(ShortMessage.NOTE_OFF, 0, note, 0), -1l);
+				isNotePressed[note] = false;
 			} catch (InvalidMidiDataException e1) {
-				// TODO Auto-generated catch block
 				e1.printStackTrace();
 			}
 		}

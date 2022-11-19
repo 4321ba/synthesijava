@@ -1,9 +1,10 @@
 package main;
 
 import java.awt.Color;
+import java.awt.Dimension;
 import java.awt.Graphics;
 
-public class Note {
+public class Note implements Comparable<Note> {
 	int pitch; // = note
 	int volume; // = velocity
 	int channel;
@@ -28,12 +29,45 @@ public class Note {
 		return calphaval;
 	}
 	
-	void paint(Graphics g, int width) {
+	static int remap(long input_min, long input_max, long value, int output_min, int output_max) {
+		//inverse lerp and lerp from
+        //https://www.gamedev.net/tutorials/programming/general-and-gameplay-programming/inverse-lerp-a-super-useful-yet-often-overlooked-function-r5230/
+        double ratio = (value - input_min) / (double)(input_max - input_min);
+        return (int) ((1.0 - ratio) * output_min + ratio * output_max + 0.5);
+	}
+	
+	// visszaadja, hogy ki kellett-e egyáltalán rajzolni, vagy már nincs is a képernyőn
+	boolean paint(Graphics g, Dimension rollSize, Piano piano, long upperTimeStamp, long lowerTimeStamp) {
 		g.setColor(getNoteColor(pitch, volume, channel));
 		
-		long currt = System.currentTimeMillis();
-		long newend = end == -1 ? currt : end;
-		g.fillRect(width*pitch/128, (int)((currt-newend)/10), width/128, (int)((newend-begin) / 10));
-		//System.out.printf("%d %d %d %d\n", 10*pitch, (int)((currt-begin)/30), 10, (int)((newend-begin) / 30));
+		long newEnd = end == -1 ? Math.max(upperTimeStamp, lowerTimeStamp) : end;
+		int[] xCoords = piano.getXCoordsForNote(pitch);
+		int xBegin = xCoords[0];
+		int xWidth = xCoords[1] - xCoords[0];
+		int y1 = remap(upperTimeStamp, lowerTimeStamp, begin, 0, rollSize.height);
+		int y2 = remap(upperTimeStamp, lowerTimeStamp, newEnd, 0, rollSize.height);
+		int yBegin = Math.min(y1, y2);
+		int yHeight = Math.abs(y1 - y2);
+		g.fillRect(xBegin, yBegin, xWidth, yHeight);
+		g.setColor(Color.BLACK);
+		g.drawRect(xBegin, yBegin, xWidth, yHeight);
+		// ha a képernyőszélek közül a régebbi timestampű régebbi, mint a frissebbik vége a hangnak, akkor még rajta van a képernyőn
+		return Math.min(upperTimeStamp, lowerTimeStamp) <= Math.max(begin, newEnd);
+	}
+	@Override
+	public int compareTo(Note o) {
+		// kirajzolás majd növekvő sorrendben történjen TODO fekete billentyűk mindig feljebb legyenek (ha lesz átfedés a billtyűk közt)
+		// this < o (azaz return < 0) ha this korábban kezdődik, mint o (ergo kirajzoláskor this legyen hátrébb)
+		if (begin != o.begin)
+			return (int) (begin - o.begin);
+		// this legyen hátrébb rajzolva (azaz this<o) akkor is, ha egyszerre kezdődnek, de this tart tovább
+		if (end != o.end)
+			return (int) (o.end - end);
+		// this legyen előrébb rajzolva (this>o <=> return>0), ha kisebb csatornán van
+		if (channel != o.channel)
+			return o.channel - channel;
+		return pitch - o.pitch; // ez egyelőre mindegy mert úgysem fedik át egymást TODO
+		// olyant nem engedünk meg, hogy ugyanaz a hangmagasság ugyanazon a csatornán egyszerre többször is szóljon
+		// így ezek a dolgok egy hangot egyértelműen azonosítanak
 	}
 }

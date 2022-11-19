@@ -25,7 +25,7 @@ import java.net.URISyntaxException;
 
 public class Main {
 
-	static JMenuBar createMenuBar(Sequencer sequencer) {
+	static JMenuBar createMenuBar(Sequencer sequencer, Piano piano) {
         // https://docs.oracle.com/javase/tutorial/uiswing/components/menu.html
 
 		JMenuBar menuBar = new JMenuBar();
@@ -52,7 +52,7 @@ public class Main {
 		
 		{ // Playback menu
 			JMenu playbackMenu = new JMenu("Playback");
-			playbackMenu.setMnemonic(KeyEvent.VK_P);
+			playbackMenu.setMnemonic(KeyEvent.VK_B);
 			menuBar.add(playbackMenu);
 			
 			JMenuItem startStopButton = new JMenuItem("Start / Stop", KeyEvent.VK_S);
@@ -66,26 +66,34 @@ public class Main {
 			externalDeviceButton.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_C, ActionEvent.CTRL_MASK));
 			playbackMenu.add(externalDeviceButton);
 		}
+		
+		{ // Piano menu
+			JMenu pianoMenu = new JMenu("Piano");
+			pianoMenu.setMnemonic(KeyEvent.VK_P);
+			menuBar.add(pianoMenu);
+			
+			JMenuItem addLeftButton = new JMenuItem("Add a key to the left side", KeyEvent.VK_L);
+			addLeftButton.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_LEFT, 0));
+			addLeftButton.addActionListener(piano);
+			pianoMenu.add(addLeftButton);
+			JMenuItem removeLeftButton = new JMenuItem("Remove a key from the left side", KeyEvent.VK_E);
+			removeLeftButton.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_LEFT, ActionEvent.SHIFT_MASK));
+			removeLeftButton.addActionListener(piano);
+			pianoMenu.add(removeLeftButton);
+			JMenuItem addRightButton = new JMenuItem("Add a key to the right side", KeyEvent.VK_L);
+			addRightButton.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_RIGHT, 0));
+			addRightButton.addActionListener(piano);
+			pianoMenu.add(addRightButton);
+			JMenuItem removeRightButton = new JMenuItem("Remove a key from the right side", KeyEvent.VK_E);
+			removeRightButton.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_RIGHT, ActionEvent.SHIFT_MASK));
+			removeRightButton.addActionListener(piano);
+			pianoMenu.add(removeRightButton);
+		}
 
 		{ // Mode menu
 			JMenu modeMenu = new JMenu("Mode");
 			modeMenu.setMnemonic(KeyEvent.VK_M);
 			menuBar.add(modeMenu);
-			
-			ButtonGroup sourceButtonGroup = new ButtonGroup();
-			JRadioButtonMenuItem midiFileSourceButton = new JRadioButtonMenuItem("MIDI file source");
-			midiFileSourceButton.setMnemonic(KeyEvent.VK_F);
-			midiFileSourceButton.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_F, ActionEvent.CTRL_MASK));
-			midiFileSourceButton.setSelected(true);
-			sourceButtonGroup.add(midiFileSourceButton);
-			modeMenu.add(midiFileSourceButton);
-			JRadioButtonMenuItem midiInputSourceButton = new JRadioButtonMenuItem("Realtime MIDI device source");
-			midiInputSourceButton.setMnemonic(KeyEvent.VK_R);
-			midiInputSourceButton.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_R, ActionEvent.CTRL_MASK));
-			sourceButtonGroup.add(midiInputSourceButton);
-			modeMenu.add(midiInputSourceButton);
-			
-			modeMenu.addSeparator();
 			
 			ButtonGroup directionButtonGroup = new ButtonGroup();
 			JRadioButtonMenuItem upwardsDirectionButton = new JRadioButtonMenuItem("Notes fly upwards");
@@ -94,7 +102,7 @@ public class Main {
 			upwardsDirectionButton.setSelected(true);
 			directionButtonGroup.add(upwardsDirectionButton);
 			modeMenu.add(upwardsDirectionButton);
-			JRadioButtonMenuItem downwardsDirectionButton = new JRadioButtonMenuItem("Notes fall downwards");
+			JRadioButtonMenuItem downwardsDirectionButton = new JRadioButtonMenuItem("Notes fall downwards (MIDI file only)");
 			downwardsDirectionButton.setMnemonic(KeyEvent.VK_D);
 			downwardsDirectionButton.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_D, ActionEvent.CTRL_MASK));
 			directionButtonGroup.add(downwardsDirectionButton);
@@ -108,23 +116,19 @@ public class Main {
 			
 			JMenuItem aboutButton = new JMenuItem("About Synthesijava", KeyEvent.VK_A);
 			aboutMenu.add(aboutButton);
-			aboutButton.addActionListener(new ActionListener() {
-				@Override public void actionPerformed(ActionEvent event) {
-					// https://stackoverflow.com/questions/9119481/how-to-present-a-simple-alert-message-in-java
-					JOptionPane.showMessageDialog(null, "Dev version.\nMade by 4321ba for the university subject Programming 3 at BME.\nUses the Java standard library.", "About", JOptionPane.INFORMATION_MESSAGE);
-				}
-			});
+			aboutButton.addActionListener( (event) -> {
+					// https://stackoverflow.com/questions/9119481/how-to-present-a-simple-alert-message-in-java TODO devversion
+					JOptionPane.showMessageDialog(null, "Dev version.\nMade by 4321ba for the university subject Programming 3 at BME.\nUses the Java standard library and the Swing toolkit.", "About", JOptionPane.INFORMATION_MESSAGE);
+				});
 			JMenuItem sourceCodeButton = new JMenuItem("Source code", KeyEvent.VK_S);
-			sourceCodeButton.addActionListener(new ActionListener() {
-				@Override public void actionPerformed(ActionEvent event) {
+			sourceCodeButton.addActionListener((event) -> {
 					try {
 						// https://stackoverflow.com/questions/748895/how-do-you-open-web-pages-in-java
 						java.awt.Desktop.getDesktop().browse(new java.net.URI("https://github.com/4321ba/synthesijava"));
 					} catch (IOException | URISyntaxException e) {
 						JOptionPane.showMessageDialog(null, "Could not open the webpage https://github.com/4321ba/synthesijava: " + e.getMessage() + ".", "Error", JOptionPane.ERROR_MESSAGE);
 					}
-				}
-			});
+				});
 			aboutMenu.add(sourceCodeButton);
 		}
 		
@@ -145,7 +149,8 @@ public class Main {
             sequencer.open();
             //trin.setReceiver(sequencer.getReceiver());
             Transmitter transmitter = sequencer.getTransmitter();
-    		Roll roll = new Roll();
+            Piano piano = new Piano();
+    		Roll roll = new Roll(piano);
     		transmitter.setReceiver(roll);
 
         	//trin.setReceiver(roll);
@@ -153,7 +158,7 @@ public class Main {
             JFrame frame = new JFrame("Synthesijava");
             frame.setSize(1280, 720);
             frame.setMinimumSize(new Dimension(320, 240));
-            frame.setJMenuBar(createMenuBar(sequencer));
+            frame.setJMenuBar(createMenuBar(sequencer, piano));
             frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 
             // https://docs.oracle.com/javase/tutorial/uiswing/layout/box.html
@@ -164,24 +169,23 @@ public class Main {
             Container pane = frame.getContentPane();
             pane.setLayout(new GridBagLayout());
             
-            Piano piano = new Piano();
             KeyboardMIDIInput kmi = new KeyboardMIDIInput();
             piano.addKeyListener(kmi);
             
-            GridBagConstraints pconstraint = new GridBagConstraints();
-            pconstraint.weightx = 1.0;
-            pconstraint.weighty = 1.0;
-            pconstraint.fill = GridBagConstraints.BOTH;
-            pconstraint.gridx = 0;
-            pconstraint.gridy = 0;
-            pane.add(piano, pconstraint);
             GridBagConstraints rconstraint = new GridBagConstraints();
             rconstraint.weightx = 1.0;
             rconstraint.weighty = 7.0;
             rconstraint.fill = GridBagConstraints.BOTH;
             rconstraint.gridx = 0;
-            rconstraint.gridy = 1;
+            rconstraint.gridy = 0;
             pane.add(roll, rconstraint);
+            GridBagConstraints pconstraint = new GridBagConstraints();
+            pconstraint.weightx = 1.0;
+            pconstraint.weighty = 1.0;
+            pconstraint.fill = GridBagConstraints.BOTH;
+            pconstraint.gridx = 0;
+            pconstraint.gridy = 1;
+            pane.add(piano, pconstraint);
 
             frame.setVisible(true);
             piano.grabFocus();

@@ -7,6 +7,8 @@ import java.util.ConcurrentModificationException;
 import java.util.Iterator;
 import java.util.LinkedHashSet;
 import java.util.Set;
+import java.util.SortedSet;
+import java.util.TreeSet;
 
 import javax.sound.midi.MidiMessage;
 import javax.sound.midi.Receiver;
@@ -19,7 +21,19 @@ public class Roll extends JPanel implements Receiver {
 	static final int MAX_CHANNELS = 16;
 	static final int MAX_PITCHES = 128;
 	
-	Set<Note> notes = new LinkedHashSet<Note>();
+	// if false, it goes upwards
+	private boolean isGoingDownwards = false;
+	// the delay between the note appearing at the top and arriving at the bottom
+	private long delayMS = 2000;
+	
+	// muszáj tudni a Piano-ról, mert ő tudja, hogy bal/jobb oldalról mennyi billentyű van levéve/hozzáadva
+	// és annak függvényében kell kirajzolni
+	private Piano piano;
+	public Roll(Piano p) {
+		piano = p;
+	}
+	
+	SortedSet<Note> notes = new TreeSet<Note>();
 	Note[][] currentlyPressed = new Note[MAX_CHANNELS][MAX_PITCHES];
 	
 	@Override
@@ -55,15 +69,16 @@ public class Roll extends JPanel implements Receiver {
 	protected void paintComponent(Graphics g) {
 	    super.paintComponent(g);
 	    Dimension size = getSize();
-	    try { // TODO
-	    	synchronized (notes) {
-	    		for (Iterator<Note> it = notes.iterator(); it.hasNext();) {
-	    			Note note = it.next();
-	    			note.paint(g, size.width);
-	    		}
-			}
-		} catch (ConcurrentModificationException e) {
-			System.err.println("CME caught");
+	    long current = System.currentTimeMillis();
+	    long upperTimeStamp = isGoingDownwards ? current : current - delayMS;
+	    long lowerTimeStamp = isGoingDownwards ? current - delayMS : current;
+    	synchronized (notes) {
+    		for (Iterator<Note> it = notes.iterator(); it.hasNext();) {
+    			Note note = it.next();
+    			boolean isDrawn = note.paint(g, size, piano, upperTimeStamp, lowerTimeStamp);
+    			if (!isDrawn)
+    				it.remove();
+    		}
 		}
 	}
 

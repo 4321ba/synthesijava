@@ -5,6 +5,8 @@ import java.awt.Dimension;
 import java.awt.Graphics;
 import java.awt.KeyEventDispatcher;
 import java.awt.KeyboardFocusManager;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
 import java.awt.event.KeyEvent;
 import java.awt.event.KeyListener;
 import java.util.ArrayList;
@@ -19,13 +21,10 @@ import javax.sound.midi.ShortMessage;
 import javax.sound.midi.Transmitter;
 import javax.swing.JPanel;
 
-public class Piano extends JPanel implements Receiver {
-	
-	public static final int  MAXNOTES = 128;
-	
+public class Piano extends JPanel implements Receiver, ActionListener {
 	
 	private int lowestNoteDisplayed = 0;
-	private int highestNoteDisplayed = MAXNOTES; // this-1 is actually the last one displayed
+	private int highestNoteDisplayed = Roll.MAX_PITCHES; // this-1 is actually the last one displayed
 
 	private static final long serialVersionUID = 1L;
 	
@@ -49,14 +48,12 @@ public class Piano extends JPanel implements Receiver {
 	    Dimension size = getSize();
 	    g.setColor(Color.BLACK);
 	    g.drawRect(0, 0, size.width - 1, size.height - 1);
-	    int noteCount = highestNoteDisplayed - lowestNoteDisplayed;
 	    for (int absoluteNote = lowestNoteDisplayed; absoluteNote < highestNoteDisplayed; ++absoluteNote) {
 	    	String noteName = getNoteName(absoluteNote);
-	    	int relativeNote = absoluteNote - lowestNoteDisplayed;
-	    	int beginPixel = ((size.width-1) * relativeNote) / noteCount;
-	    	int endPixel = ((size.width-1) * (relativeNote + 1)) / noteCount;
-//	    	int middlePixel = ((size.width-1) * (relativeNote * 2 + 1)) / (noteCount * 2);
-
+	    	int[] xCoords = getXCoordsForNote(absoluteNote);
+	    	int beginPixel = xCoords[0];
+	    	int endPixel = xCoords[1];
+	    	
 		    g.setColor(Color.BLACK);
 	    	if (noteName.equals("C") || noteName.equals("F"))
 	    		g.drawLine(beginPixel, 0, beginPixel, size.height - 1);
@@ -72,16 +69,44 @@ public class Piano extends JPanel implements Receiver {
 	    			lerpWeight = 1/2.0;
 	    		if (noteName.equals("A#"))
 	    			lerpWeight = 3/4.0;
-	    		int middlePixel = (int)(lerpWeight * beginPixel + (1 - lerpWeight) * endPixel + 0.5);
+	    		int blackLineXCoord = (int)(lerpWeight * beginPixel + (1 - lerpWeight) * endPixel + 0.5); // +0.5 for rounding
 	    		g.fillRect(beginPixel, 0, endPixel - beginPixel, (int)(size.height * 0.7));
-    			g.drawLine(middlePixel, 0, middlePixel, size.height - 1);
+    			g.drawLine(blackLineXCoord, 0, blackLineXCoord, size.height - 1);
     		    g.setColor(Color.WHITE);
 	    	}
 		    g.drawString(""+KeyboardMIDIInput.noteToKey[absoluteNote], beginPixel, size.height / 2);
 	    }
 	}
-
 	
+	public int[] getXCoordsForNote(int note) {
+	    Dimension size = getSize();
+	    int noteCount = highestNoteDisplayed - lowestNoteDisplayed;
+    	int relativeNote = note - lowestNoteDisplayed;
+    	int beginPixel = ((size.width-1) * relativeNote) / noteCount; // begin x coord for the note
+    	int endPixel = ((size.width-1) * (relativeNote + 1)) / noteCount; // end x coord for note
+		return new int[] {beginPixel, endPixel};
+	}
 	
+	@Override
+	public void actionPerformed(ActionEvent e) {
+		// https://www.javatpoint.com/java-switch-with-string
+        switch(e.getActionCommand()) {
+	        case "Add a key to the left side":
+	        	lowestNoteDisplayed = Math.max(lowestNoteDisplayed - 1, 0);
+	            break;
+	        case "Remove a key from the left side":
+	        	lowestNoteDisplayed = Math.min(lowestNoteDisplayed + 1, highestNoteDisplayed - 1);
+	            break;
+	        case "Add a key to the right side":
+	        	highestNoteDisplayed = Math.min(highestNoteDisplayed + 1, Roll.MAX_PITCHES);
+	            break;
+	        case "Remove a key from the right side":
+	        	highestNoteDisplayed = Math.max(highestNoteDisplayed - 1, lowestNoteDisplayed + 1);
+	            break;
+	        default:
+	        	throw new RuntimeException("Piano got an unknown action " + e.getActionCommand());
+        }
+        repaint();
+    }
 	
 }
