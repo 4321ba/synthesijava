@@ -31,7 +31,7 @@ public class MidiFileChooser implements ActionListener {
         	try {
 				sequencer.setSequence(MidiSystem.getSequence(fileChooser.getSelectedFile()));
 	            sequencer.start();//TODO a start/stop gombra
-            	JOptionPane.showMessageDialog(null, "File successfully loaded.", "Success", JOptionPane.INFORMATION_MESSAGE);
+            	//JOptionPane.showMessageDialog(null, "File successfully loaded.", "Success", JOptionPane.INFORMATION_MESSAGE);
 			} catch (IOException e) {
 				// https://www.baeldung.com/java-concat-null-string
 				JOptionPane.showMessageDialog(null, "Error while loading file: " + e.getMessage() + ".", "Error", JOptionPane.ERROR_MESSAGE);

@@ -24,7 +24,7 @@ public class Note implements Comparable<Note> {
 	public static Color getNoteColor(int pitch, int volume, int channel) {
 		//long currt = System.currentTimeMillis();
 		//Color c = new Color(Color.HSBtoRGB((channel/16.0f + (currt%1000)/1000.0f)-(long)(channel/16.0f + (currt%1000)/1000.0f), 1.0f, 1.0f));
-		Color c = new Color(Color.HSBtoRGB(channel/16.0f, 1.0f, 1.0f));
+		Color c = new Color(Color.HSBtoRGB(channel/16.0f, 1.0f, Piano.isBlackNote(pitch) ? 0.7f : 1.0f));
 		Color calphaval = new Color(c.getRed(), c.getGreen(), c.getBlue(), volume + 128);
 		return calphaval;
 	}
@@ -56,7 +56,11 @@ public class Note implements Comparable<Note> {
 	}
 	@Override
 	public int compareTo(Note o) {
-		// kirajzolás majd növekvő sorrendben történjen TODO fekete billentyűk mindig feljebb legyenek (ha lesz átfedés a billtyűk közt)
+		// kirajzolás növekvő sorrendben történjen
+		// mivel a fekete hangok keskenyebbek és lehet, hogy teljesen ki lesznek takarva, a fehér viszont mindig kilátszik a fekete alól,
+		// ezért a fekete kerül mindig előbbre (későbbi kirajzolásra), azaz ha this fekete, akkor this>o <=> return>0
+		if (Piano.isBlackNote(pitch) != Piano.isBlackNote(o.pitch))
+			return Piano.isBlackNote(pitch) ? 1 : -1;
 		// this < o (azaz return < 0) ha this korábban kezdődik, mint o (ergo kirajzoláskor this legyen hátrébb)
 		if (begin != o.begin)
 			return (int) (begin - o.begin);
@@ -66,7 +70,7 @@ public class Note implements Comparable<Note> {
 		// this legyen előrébb rajzolva (this>o <=> return>0), ha kisebb csatornán van
 		if (channel != o.channel)
 			return o.channel - channel;
-		return pitch - o.pitch; // ez egyelőre mindegy mert úgysem fedik át egymást TODO
+		return pitch - o.pitch;
 		// olyant nem engedünk meg, hogy ugyanaz a hangmagasság ugyanazon a csatornán egyszerre többször is szóljon
 		// így ezek a dolgok egy hangot egyértelműen azonosítanak
 	}

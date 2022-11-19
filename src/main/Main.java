@@ -147,11 +147,27 @@ public class Main {
         	Sequencer sequencer = MidiSystem.getSequencer();
         	//Transmitter trin = MidiSystem.getTransmitter();
             sequencer.open();
+            for (Transmitter transmitter : sequencer.getTransmitters()) {
+            	transmitter.close();
+            	System.out.println("closed");
+            }
             //trin.setReceiver(sequencer.getReceiver());
             Transmitter transmitter = sequencer.getTransmitter();
             Piano piano = new Piano();
     		Roll roll = new Roll(piano);
     		transmitter.setReceiver(roll);
+            Transmitter seq_transmitter2 = sequencer.getTransmitter();
+            Delayer delayer = new Delayer();
+            seq_transmitter2.setReceiver(delayer);
+            Splitter splitter = new Splitter();
+            delayer.setReceiver(splitter.newReceiver());
+            delayer.start();
+            Synthesizer synthesizer = MidiSystem.getSynthesizer();
+            synthesizer.open();
+            splitter.newTransmitter().setReceiver(synthesizer.getReceiver());
+            splitter.newTransmitter().setReceiver(piano);
+            
+            
 
         	//trin.setReceiver(roll);
             // TODO thread safety???
@@ -190,28 +206,30 @@ public class Main {
             frame.setVisible(true);
             piano.grabFocus();
 
-            Synthesizer defs = MidiSystem.getSynthesizer();
-            Receiver defSynth = defs.getReceiver();
-            defs.open();
-            System.out.println(defs.isOpen());
-            Splitter spl = new Splitter();
-            kmi.setReceiver(spl);//TODO nem szabad elvileg 2 transmitternek uazt a receivert hívogatnia
-            spl.newTransmitter().setReceiver(defSynth);
-            spl.newTransmitter().setReceiver(roll);
+//            Synthesizer defs = MidiSystem.getSynthesizer();
+//            Receiver defSynth = defs.getReceiver();
+//            defs.open();
+//            System.out.println(defs.isOpen());
+//            Splitter spl = new Splitter();
+//            kmi.setReceiver(spl);//TODO nem szabad elvileg 2 transmitternek uazt a receivert hívogatnia
+            kmi.setReceiver(roll);
             
             // https://stackoverflow.com/questions/5824049/running-a-method-when-closing-the-program
+            // tudom hogy csúnya, de ezért a 3 sorért nem szeretnék egy új fájlt létrehozni, és ez logikailag is ide illik
             frame.addWindowListener(new WindowAdapter() {
                 public void windowClosing(WindowEvent we) {
                 	//System.out.println("záródunk");
                 	//trin.close();
             		transmitter.close();
                 	sequencer.close();
+                	seq_transmitter2.close();
+                	delayer.close();
                 }
             });
             
             // https://stackoverflow.com/questions/57948299/why-does-my-custom-swing-component-repaint-faster-when-i-move-the-mouse-java
             /* Update the scene every 40 milliseconds. */
-            Timer timer = new Timer(17, (e) -> roll.repaint());
+            Timer timer = new Timer(17, (e) -> pane.repaint());
             timer.start();
             
             //while (true)

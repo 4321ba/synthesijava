@@ -22,9 +22,9 @@ public class Roll extends JPanel implements Receiver {
 	static final int MAX_PITCHES = 128;
 	
 	// if false, it goes upwards
-	private boolean isGoingDownwards = false;
+	private boolean isGoingDownwards = true;
 	// the delay between the note appearing at the top and arriving at the bottom
-	private long delayMS = 2000;
+	public static final long DELAYMS = 2000;
 	
 	// muszáj tudni a Piano-ról, mert ő tudja, hogy bal/jobb oldalról mennyi billentyű van levéve/hozzáadva
 	// és annak függvényében kell kirajzolni
@@ -70,8 +70,8 @@ public class Roll extends JPanel implements Receiver {
 	    super.paintComponent(g);
 	    Dimension size = getSize();
 	    long current = System.currentTimeMillis();
-	    long upperTimeStamp = isGoingDownwards ? current : current - delayMS;
-	    long lowerTimeStamp = isGoingDownwards ? current - delayMS : current;
+	    long upperTimeStamp = isGoingDownwards ? current : current - DELAYMS;
+	    long lowerTimeStamp = isGoingDownwards ? current - DELAYMS : current;
     	synchronized (notes) {
     		for (Iterator<Note> it = notes.iterator(); it.hasNext();) {
     			Note note = it.next();

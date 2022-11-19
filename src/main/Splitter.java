@@ -7,49 +7,48 @@ import javax.sound.midi.MidiMessage;
 import javax.sound.midi.Receiver;
 import javax.sound.midi.Transmitter;
 
-public class Splitter implements Receiver {
+public class Splitter {
 
-	List<Transmitter> tr = new ArrayList<Transmitter>();
+	private List<Transmitter> transmitters = new ArrayList<Transmitter>();
+	private List<Receiver> receivers = new ArrayList<Receiver>();
 	
-	@Override
-	public void send(MidiMessage message, long timeStamp) {
-		for (Transmitter transmitter : tr) {
-			transmitter.getReceiver().send(message, timeStamp);
-		}
-	}
 	
 	public Transmitter newTransmitter() {
 		Transmitter t = new InnerTransmitter();
-		tr.add(t);
+		transmitters.add(t);
 		return t;
 	}
 
-	@Override
-	public void close() {
-		// TODO Auto-generated method stub
-		
+	public Receiver newReceiver() {
+		Receiver r = new InnerReceiver(transmitters);
+		receivers.add(r);
+		return r;
 	}
 	
-	class InnerTransmitter implements Transmitter {
-
-		Receiver r = null;
-		
+	static private class InnerTransmitter implements Transmitter {
+		private Receiver r = null;
 		@Override
-		public void setReceiver(Receiver receiver) {
-			r = receiver;
-		}
-
+		public void setReceiver(Receiver receiver) { r = receiver; }
 		@Override
-		public Receiver getReceiver() {
-			return r;
-		}
-
+		public Receiver getReceiver() {	return r; }
 		@Override
-		public void close() {
-			// TODO Auto-generated method stub
-			
+		public void close() {}
+	}
+	
+	static private class InnerReceiver implements Receiver {
+		private List<Transmitter> transmitters;
+		public InnerReceiver(List<Transmitter> trs) {
+			transmitters = trs;
 		}
-		
+		// mások ezt fogják hívni, és mindent ami itt jön, akarjuk továbbítani az összes innertransmitter.r felé
+		@Override
+		public void send(MidiMessage message, long timeStamp) {
+			for (Transmitter transmitter : transmitters) {
+				transmitter.getReceiver().send(message, timeStamp);
+			}
+		}
+		@Override
+		public void close() {}
 	}
 
 }
