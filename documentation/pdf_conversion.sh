@@ -12,3 +12,6 @@ pandoc documentation.md \
 #--verbose
 
 #-V fontsize=12pt \
+
+# Szükséges:
+# sudo apt install librsvg2-bin texlive-xetex

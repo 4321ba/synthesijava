@@ -163,7 +163,11 @@ public class Main {
             // https://docs.oracle.com/javase/tutorial/uiswing/layout/gridbag.html
             Container pane = frame.getContentPane();
             pane.setLayout(new GridBagLayout());
+            
             Piano piano = new Piano();
+            KeyboardMIDIInput kmi = new KeyboardMIDIInput();
+            piano.addKeyListener(kmi);
+            
             GridBagConstraints pconstraint = new GridBagConstraints();
             pconstraint.weightx = 1.0;
             pconstraint.weighty = 1.0;
@@ -187,7 +191,7 @@ public class Main {
             defs.open();
             System.out.println(defs.isOpen());
             Splitter spl = new Splitter();
-            piano.setReceiver(spl);//TODO nem szabad elvileg 2 transmitternek uazt a receivert hívogatnia
+            kmi.setReceiver(spl);//TODO nem szabad elvileg 2 transmitternek uazt a receivert hívogatnia
             spl.newTransmitter().setReceiver(defSynth);
             spl.newTransmitter().setReceiver(roll);
             

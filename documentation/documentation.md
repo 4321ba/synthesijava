@@ -34,3 +34,8 @@ Lesz egy Piano nevű osztály, ami ki tudja rajzolni a billentyűket. Kimentés 
 Lesz egy KeyboardMIDIInput nevű osztály, ami a Piano eventjeit dolgozza fel (pl számítógép billentyű lenyomása), és Transmittálja tovább, mintha egy igazi MIDI eszközről jött volna.
 
 Lesz egy késleltető osztály (ha nem találok hasonlót a standard könyvtárban), ami receivel MIDI üzeneteket, és pl. 3 másodperc múlva transmittálja őket. Ez ahhoz kell, hogy a hang ténylegesen akkor szólaljon meg, amikor leért a zongora billentyűihez, viszont a Roll már meg tudja korábban kapni ugyanazt az üzenetet, hogy ki tudja időben rajzolni.
+
+# Terv
+
+## MIDI Transmitterek és Receiverek összekötése
+![Dobozok nyilakkal összekötve](MIDI_devices.drawio.png)
