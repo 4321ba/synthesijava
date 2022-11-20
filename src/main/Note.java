@@ -48,9 +48,9 @@ public class Note implements Comparable<Note> {
 		int y2 = remap(upperTimeStamp, lowerTimeStamp, newEnd, 0, rollSize.height);
 		int yBegin = Math.min(y1, y2);
 		int yHeight = Math.abs(y1 - y2);
-		g.fillRect(xBegin, yBegin, xWidth, yHeight);
+		g.fillRoundRect(xBegin, yBegin, xWidth, yHeight, xWidth / 2, xWidth / 2);
 		g.setColor(Color.BLACK);
-		g.drawRect(xBegin, yBegin, xWidth, yHeight);
+		g.drawRoundRect(xBegin, yBegin, xWidth, yHeight, xWidth / 2, xWidth / 2);
 		// ha a képernyőszélek közül a régebbi timestampű régebbi, mint a frissebbik vége a hangnak, akkor még rajta van a képernyőn
 		return Math.min(upperTimeStamp, lowerTimeStamp) <= Math.max(begin, newEnd);
 	}
