@@ -9,6 +9,8 @@ import javax.sound.midi.Synthesizer;
 import javax.sound.midi.Transmitter;
 import javax.swing.*;
 
+import synthesijava.listener.DirectionChangeListener;
+import synthesijava.listener.ExternalDeviceConnector;
 import synthesijava.listener.MidiFileChooser;
 import synthesijava.listener.PianoSaverLoader;
 import synthesijava.listener.StartStopListener;
@@ -33,7 +35,7 @@ import java.net.URISyntaxException;
 
 public class Main {
 
-	static JMenuBar createMenuBar(Sequencer sequencer, Piano piano) {
+	static JMenuBar createMenuBar(Sequencer sequencer, Piano piano, DirectionChangeListener dCL, ExternalDeviceConnector eDC) {
         // https://docs.oracle.com/javase/tutorial/uiswing/components/menu.html
 
 		JMenuBar menuBar = new JMenuBar();
@@ -75,6 +77,7 @@ public class Main {
 
 			JMenuItem externalDeviceButton = new JMenuItem("Connect / Disconnect external MIDI device", KeyEvent.VK_C);
 			externalDeviceButton.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_C, ActionEvent.CTRL_MASK));
+			externalDeviceButton.addActionListener(eDC);
 			playbackMenu.add(externalDeviceButton);
 		}
 		
@@ -110,14 +113,19 @@ public class Main {
 			JRadioButtonMenuItem upwardsDirectionButton = new JRadioButtonMenuItem("Notes fly upwards");
 			upwardsDirectionButton.setMnemonic(KeyEvent.VK_U);
 			upwardsDirectionButton.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_U, ActionEvent.CTRL_MASK));
+			upwardsDirectionButton.addActionListener(dCL);
 			upwardsDirectionButton.setSelected(true);
 			directionButtonGroup.add(upwardsDirectionButton);
 			modeMenu.add(upwardsDirectionButton);
 			JRadioButtonMenuItem downwardsDirectionButton = new JRadioButtonMenuItem("Notes fall downwards");
 			downwardsDirectionButton.setMnemonic(KeyEvent.VK_D);
 			downwardsDirectionButton.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_D, ActionEvent.CTRL_MASK));
+			downwardsDirectionButton.addActionListener(dCL);
 			directionButtonGroup.add(downwardsDirectionButton);
 			modeMenu.add(downwardsDirectionButton);
+			
+			downwardsDirectionButton.doClick(); // hogy a listener beállítsa a dolgokat
+			
 		}
 		
 		{ // About menu
@@ -146,11 +154,11 @@ public class Main {
 		return menuBar;
 	}
 	
-	static void createAndShowGUI(Sequencer sequencer, Piano piano, Roll roll, WindowListener closingAction) {
+	static void createAndShowGUI(Sequencer sequencer, Piano piano, Roll roll, DirectionChangeListener dCL, ExternalDeviceConnector eDC, WindowListener closingAction) {
 		JFrame frame = new JFrame("Synthesijava");
         frame.setSize(1280, 720);
         frame.setMinimumSize(new Dimension(320, 240));
-        frame.setJMenuBar(createMenuBar(sequencer, piano));
+        frame.setJMenuBar(createMenuBar(sequencer, piano, dCL, eDC));
         frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         frame.addWindowListener(closingAction);
 
@@ -195,47 +203,60 @@ public class Main {
         try {
         	// https://docs.oracle.com/javase/tutorial/sound/overview-MIDI.html
         	
+        	// összekötögetés pontosan a dokumentációban
         	
+        	// Sequencer
         	Sequencer sequencer = MidiSystem.getSequencer();
-        	//Transmitter trin = MidiSystem.getTransmitter();
             sequencer.open();
-            for (Transmitter transmitter : sequencer.getTransmitters()) {
-            	transmitter.close();
-            	System.out.println("closed");
-            }
-            //trin.setReceiver(sequencer.getReceiver());
-            Transmitter transmitter = sequencer.getTransmitter();
+            for (Transmitter transmitter : sequencer.getTransmitters())
+            	transmitter.close(); // alapból össze van kötve a szintetizátorral, de mi ezt nem szeretnénk
+            Transmitter sequencerTransmitter = sequencer.getTransmitter();
+            
+            // Piano
             Piano piano = new Piano();
+            
+            // Roll
     		Roll roll = new Roll(piano::getXCoordsForNote);
-    		transmitter.setReceiver(roll);
-            Transmitter seq_transmitter2 = sequencer.getTransmitter();
-            Delayer delayer = new Delayer();
-            seq_transmitter2.setReceiver(delayer);
-            Splitter splitter = new Splitter();
-            delayer.setReceiver(splitter.newReceiver());
-            delayer.start();
+    		
+            // Synthesizer
             Synthesizer synthesizer = MidiSystem.getSynthesizer();
             synthesizer.open();
+    		
+    		// KeyboardMIDIInput
+            KeyboardMIDIInput keyboardMIDIInput = new KeyboardMIDIInput();
+            piano.addKeyListener(keyboardMIDIInput);
+
+            // az a Splitter, amelyik az ábrán a bal oldalon van
+            Splitter leftSplitter = new Splitter();
+            
+            // az a Splitter, amelyik az ábrán a jobb oldalon van
+            Splitter rightSplitter = new Splitter();
+            
+            // összekötések
+            
+            sequencerTransmitter.setReceiver(leftSplitter.newReceiver());
+            keyboardMIDIInput.setReceiver(leftSplitter.newReceiver());
+            // a Default Transmittert majd a lentebb készített ExternalDeviceConnector fogja csatlakoztatni
+            
+            leftSplitter.newTransmitter().setReceiver(roll);
+            // a Delayert majd a lentebb készített DirectionChangeListener fogja ki-be rakosgatni
+
+            rightSplitter.newTransmitter().setReceiver(synthesizer.getReceiver());
+            rightSplitter.newTransmitter().setReceiver(piano);
+    		
+    		
             
             //synthesizer.unloadAllInstruments(synthesizer.getDefaultSoundbank());
             boolean ret =synthesizer.loadAllInstruments(MidiSystem.getSoundbank(new File("/home/balint/Music/wynncraft_soundfont.sf2")));
-            boolean ret2 = synthesizer.isSoundbankSupported(MidiSystem.getSoundbank(new File("/home/balint/Music/wynncraft_soundfont.sf2")));
             
-            System.out.println(ret+" "+ret2+" "+synthesizer.toString()+" "+synthesizer.getMaxPolyphony());
-            
-            splitter.newTransmitter().setReceiver(synthesizer.getReceiver());
-            splitter.newTransmitter().setReceiver(piano);
+            System.out.println(ret+" "+synthesizer.toString()+" "+synthesizer.getMaxPolyphony());
             
             
-
-        	//trin.setReceiver(roll);
-            // TODO thread safety??? swingutilities.invokelater
           //TODO nem szabad elvileg 2 transmitternek uazt a receivert hívogatnia
             
 
-            KeyboardMIDIInput kmi = new KeyboardMIDIInput();
-            piano.addKeyListener(kmi);
-            kmi.setReceiver(roll);
+			DirectionChangeListener dCL = new DirectionChangeListener(roll, leftSplitter, rightSplitter);
+			ExternalDeviceConnector eDC = new ExternalDeviceConnector(leftSplitter.newReceiver());
             
             // https://stackoverflow.com/questions/5824049/running-a-method-when-closing-the-program
             // tudom hogy csúnya, de ezért a 3 sorért nem szeretnék egy új fájlt létrehozni, és ez logikailag ide illik
@@ -244,14 +265,13 @@ public class Main {
                 public void windowClosing(WindowEvent we) {
                 	//System.out.println("záródunk");
                 	//trin.close();
-            		transmitter.close();
+                	sequencerTransmitter.close();
                 	sequencer.close();
-                	seq_transmitter2.close();
-                	delayer.close();
+                	dCL.close();
                 }
             };
             //TODO biztos minden be van zárva??
-            SwingUtilities.invokeLater(()->Main.createAndShowGUI(sequencer, piano, roll, closingAction));
+            SwingUtilities.invokeLater(() -> Main.createAndShowGUI(sequencer, piano, roll, dCL, eDC, closingAction));
             
         }
         catch (Exception ex) {

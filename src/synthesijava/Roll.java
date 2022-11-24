@@ -24,8 +24,11 @@ public class Roll extends JPanel implements Receiver {
 	
 	// if false, it goes upwards
 	private boolean isGoingDownwards = true;
+	public void setGoingDownwards(boolean isGoingDownwards) {
+		this.isGoingDownwards = isGoingDownwards;
+	}
 	// the delay between the note appearing at the top and arriving at the bottom
-	public static final long DELAYMS = 2000;
+	public static final long DELAYMS = 3000;
 	
 	// muszáj tudni a Piano-nak erről a függvényéről legalább, mert ő tudja, hogy bal/jobb oldalról mennyi billentyű van levéve/hozzáadva
 	// és annak függvényében kell a lefele eső hangokat is kirajzolni
