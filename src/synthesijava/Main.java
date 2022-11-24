@@ -9,8 +9,8 @@ import javax.sound.midi.Synthesizer;
 import javax.sound.midi.Transmitter;
 import javax.swing.*;
 
-import synthesijava.listeners.MidiFileChooser;
-import synthesijava.listeners.StartStopListener;
+import synthesijava.listener.MidiFileChooser;
+import synthesijava.listener.StartStopListener;
 import synthesijava.midi.Delayer;
 import synthesijava.midi.Splitter;
 
