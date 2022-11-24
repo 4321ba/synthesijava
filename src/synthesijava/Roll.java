@@ -1,7 +1,6 @@
 package synthesijava;
 
 import java.awt.Dimension;
-//import java.awt.Canvas;
 import java.awt.Graphics;
 import java.util.Iterator;
 import java.util.SortedSet;
