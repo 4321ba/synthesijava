@@ -14,10 +14,17 @@ public class ExternalDeviceConnector implements ActionListener {
 
 	Receiver leftSplitterReceiver;
 	boolean isConnected = false;
-	Transmitter defaultTransmitter;
+	Transmitter defaultTransmitter = null;
 	public ExternalDeviceConnector(Receiver leftSplitterReceiver) {
 		this.leftSplitterReceiver = leftSplitterReceiver;
 	}
+	// ezt kell meghívni bezárás előtt, hogy bezárja az esetleg megnyitott defaultTransmittert
+	public void close() {
+		if (defaultTransmitter != null)
+			defaultTransmitter.close();
+		defaultTransmitter = null;
+	}
+	
 	@Override public void actionPerformed(ActionEvent event) {
 		try {
 			if (!isConnected) {
@@ -27,6 +34,7 @@ public class ExternalDeviceConnector implements ActionListener {
             	JOptionPane.showMessageDialog(null, "External device successfully opened.", "Success", JOptionPane.INFORMATION_MESSAGE);
 			} else {
 				defaultTransmitter.close();
+				defaultTransmitter = null;
 				isConnected = false;
             	JOptionPane.showMessageDialog(null, "External device successfully closed.", "Success", JOptionPane.INFORMATION_MESSAGE);
 			}

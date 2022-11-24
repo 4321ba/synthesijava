@@ -1,35 +1,37 @@
 package synthesijava;
 
-import javax.sound.midi.InvalidMidiDataException;
 import javax.sound.midi.MidiSystem;
-import javax.sound.midi.Receiver;
-import javax.sound.midi.Sequence;
+import javax.sound.midi.MidiUnavailableException;
 import javax.sound.midi.Sequencer;
 import javax.sound.midi.Synthesizer;
 import javax.sound.midi.Transmitter;
-import javax.swing.*;
+import javax.swing.ButtonGroup;
+import javax.swing.JFrame;
+import javax.swing.JMenu;
+import javax.swing.JMenuBar;
+import javax.swing.JMenuItem;
+import javax.swing.JOptionPane;
+import javax.swing.JRadioButtonMenuItem;
+import javax.swing.KeyStroke;
+import javax.swing.SwingUtilities;
+import javax.swing.Timer;
 
 import synthesijava.listener.DirectionChangeListener;
 import synthesijava.listener.ExternalDeviceConnector;
 import synthesijava.listener.MidiFileChooser;
 import synthesijava.listener.PianoSaverLoader;
 import synthesijava.listener.StartStopListener;
-import synthesijava.midi.Delayer;
 import synthesijava.midi.Splitter;
 
-import java.awt.BorderLayout;
 import java.awt.Container;
 import java.awt.Dimension;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
 import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
 import java.awt.event.KeyEvent;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 import java.awt.event.WindowListener;
-import java.io.File;
-import java.io.FileInputStream;
 import java.io.IOException;
 import java.net.URISyntaxException;
 
@@ -244,16 +246,7 @@ public class Main {
             rightSplitter.newTransmitter().setReceiver(synthesizer.getReceiver());
             rightSplitter.newTransmitter().setReceiver(piano);
     		
-    		
-            
-            //synthesizer.unloadAllInstruments(synthesizer.getDefaultSoundbank());
-            boolean ret =synthesizer.loadAllInstruments(MidiSystem.getSoundbank(new File("/home/balint/Music/wynncraft_soundfont.sf2")));
-            
-            System.out.println(ret+" "+synthesizer.toString()+" "+synthesizer.getMaxPolyphony());
-            
-            
-          //TODO nem szabad elvileg 2 transmitternek uazt a receivert hívogatnia
-            
+            //synthesizer.loadAllInstruments(MidiSystem.getSoundbank(new File("...-.sf2")));
 
 			DirectionChangeListener dCL = new DirectionChangeListener(roll, leftSplitter, rightSplitter);
 			ExternalDeviceConnector eDC = new ExternalDeviceConnector(leftSplitter.newReceiver());
@@ -263,19 +256,16 @@ public class Main {
             // a megnyitások után
             WindowListener closingAction = new WindowAdapter() {
                 public void windowClosing(WindowEvent we) {
-                	//System.out.println("záródunk");
-                	//trin.close();
-                	sequencerTransmitter.close();
                 	sequencer.close();
+                	synthesizer.close();
                 	dCL.close();
+                	eDC.close();
                 }
             };
-            //TODO biztos minden be van zárva??
+
             SwingUtilities.invokeLater(() -> Main.createAndShowGUI(sequencer, piano, roll, dCL, eDC, closingAction));
-            
         }
-        catch (Exception ex) {
-        	
+        catch (MidiUnavailableException ex) {
             ex.printStackTrace();
         }
     }

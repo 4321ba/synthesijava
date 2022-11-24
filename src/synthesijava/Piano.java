@@ -3,22 +3,11 @@ package synthesijava;
 import java.awt.Color;
 import java.awt.Dimension;
 import java.awt.Graphics;
-import java.awt.KeyEventDispatcher;
-import java.awt.KeyboardFocusManager;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-import java.awt.event.KeyEvent;
-import java.awt.event.KeyListener;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-
-import javax.sound.midi.InvalidMidiDataException;
 import javax.sound.midi.MidiMessage;
 import javax.sound.midi.Receiver;
 import javax.sound.midi.ShortMessage;
-import javax.sound.midi.Transmitter;
 import javax.swing.JPanel;
 
 public class Piano extends JPanel implements Receiver, ActionListener {
@@ -42,6 +31,10 @@ public class Piano extends JPanel implements Receiver, ActionListener {
 		if (!(message instanceof ShortMessage))
 			return;
 		ShortMessage sm = (ShortMessage) message;
+		// control change 123 means toggle all notes off: this is emitted by the synthesizer when stopping the playback
+		// https://www.whippedcreamsounds.com/midi-cc-list/
+		if (sm.getCommand() == ShortMessage.CONTROL_CHANGE && sm.getData1()  == 123 && sm.getChannel() == 0)
+			keyColors = new Color[Roll.MAX_PITCHES];
 		if (sm.getCommand() != ShortMessage.NOTE_ON && sm.getCommand() != ShortMessage.NOTE_OFF)
 			return;
 		int channel = sm.getChannel();
@@ -108,7 +101,9 @@ public class Piano extends JPanel implements Receiver, ActionListener {
 	    		g.drawRect(beginPixel, 0, endPixel - beginPixel, (int)(size.height * 0.7));
     		    g.setColor(Color.WHITE);
 	    	}
-		    g.drawString(""+KeyboardMIDIInput.noteToKey[absoluteNote], (beginPixel+endPixel)/2-3, size.height / 2);//TODO x koord csúnya
+		    g.drawString(""+KeyboardMIDIInput.noteToKey[absoluteNote], 
+		    		((size.width-1) * (2 * (absoluteNote - lowestNoteDisplayed) + 1)) / (highestNoteDisplayed - lowestNoteDisplayed) / 2 - 3,
+		    		size.height / 2);
 	    }
 	    g.setColor(Color.BLACK);
 	    g.drawRect(0, 0, size.width - 1, size.height - 1);

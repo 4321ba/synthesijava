@@ -4,7 +4,6 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 
 import javax.sound.midi.Receiver;
-import javax.sound.midi.Sequencer;
 import javax.sound.midi.Transmitter;
 
 import synthesijava.Roll;
