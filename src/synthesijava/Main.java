@@ -10,6 +10,7 @@ import javax.sound.midi.Transmitter;
 import javax.swing.*;
 
 import synthesijava.listener.MidiFileChooser;
+import synthesijava.listener.PianoSaverLoader;
 import synthesijava.listener.StartStopListener;
 import synthesijava.midi.Delayer;
 import synthesijava.midi.Splitter;
@@ -48,11 +49,14 @@ public class Main {
 			
 			fileMenu.addSeparator();
 
+			PianoSaverLoader pianoSaverLoader = new PianoSaverLoader(piano);
 			JMenuItem loadPianoButton = new JMenuItem("Load piano settings", KeyEvent.VK_L);
 			loadPianoButton.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_L, ActionEvent.CTRL_MASK));
+			loadPianoButton.addActionListener(pianoSaverLoader);
 			fileMenu.add(loadPianoButton);
 			JMenuItem savePianoButton = new JMenuItem("Save piano settings", KeyEvent.VK_S);
 			savePianoButton.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_S, ActionEvent.CTRL_MASK));
+			savePianoButton.addActionListener(pianoSaverLoader);
 			fileMenu.add(savePianoButton);
 		}
 		
@@ -171,10 +175,11 @@ public class Main {
             Synthesizer synthesizer = MidiSystem.getSynthesizer();
             synthesizer.open();
             
-            synthesizer.unloadAllInstruments(synthesizer.getDefaultSoundbank());
+            //synthesizer.unloadAllInstruments(synthesizer.getDefaultSoundbank());
             boolean ret =synthesizer.loadAllInstruments(MidiSystem.getSoundbank(new File("/home/balint/Music/wynncraft_soundfont.sf2")));
             boolean ret2 = synthesizer.isSoundbankSupported(MidiSystem.getSoundbank(new File("/home/balint/Music/wynncraft_soundfont.sf2")));
-            System.out.println(ret+" "+ret2+" "+synthesizer.toString());
+            
+            System.out.println(ret+" "+ret2+" "+synthesizer.toString()+" "+synthesizer.getMaxPolyphony());
             
             splitter.newTransmitter().setReceiver(synthesizer.getReceiver());
             splitter.newTransmitter().setReceiver(piano);

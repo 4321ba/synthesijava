@@ -13,10 +13,12 @@ public class StartStopListener implements ActionListener {
 		sequencer = s;
 	}
 	@Override public void actionPerformed(ActionEvent event) {
-		if (sequencer.isRunning())
-			sequencer.stop();
-		else
-			sequencer.start();
+		if (sequencer.getSequence() != null) {
+			if (sequencer.isRunning())
+				sequencer.stop();
+			else
+				sequencer.start();
+		}
 	}
 
 }

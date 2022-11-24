@@ -26,6 +26,13 @@ public class Piano extends JPanel implements Receiver, ActionListener {
 	private int lowestNoteDisplayed = 0;
 	private int highestNoteDisplayed = Roll.MAX_PITCHES; // this-1 is actually the last one displayed
 
+	// operator= cpp-ból, beolvasáshoz
+	public Piano operatorEQ(Piano other) {
+		this.lowestNoteDisplayed = other.lowestNoteDisplayed;
+		this.highestNoteDisplayed = other.highestNoteDisplayed;
+		return this;
+	}
+	
 	private static final long serialVersionUID = 1L;
 	
 	// ez ilyen félig-csúnya megoldás, mert ha egy csatornán még szól hang miközben egy másikon épp befejeződött, azt így nem fogja figyelembe venni
