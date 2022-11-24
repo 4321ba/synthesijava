@@ -1,4 +1,4 @@
-package main;
+package synthesijava;
 
 import java.awt.Color;
 import java.awt.Dimension;

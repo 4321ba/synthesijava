@@ -1,4 +1,4 @@
-package main;
+package synthesijava.listeners;
 
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
@@ -30,7 +30,7 @@ public class MidiFileChooser implements ActionListener {
         if (fileChooser.showOpenDialog(null) == JFileChooser.APPROVE_OPTION) {
         	try {
 				sequencer.setSequence(MidiSystem.getSequence(fileChooser.getSelectedFile()));
-	            sequencer.start();//TODO a start/stop gombra
+	            sequencer.start();
             	//JOptionPane.showMessageDialog(null, "File successfully loaded.", "Success", JOptionPane.INFORMATION_MESSAGE);
 			} catch (IOException e) {
 				// https://www.baeldung.com/java-concat-null-string

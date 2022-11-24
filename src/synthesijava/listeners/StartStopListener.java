@@ -1,4 +1,4 @@
-package main;
+package synthesijava.listeners;
 
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;

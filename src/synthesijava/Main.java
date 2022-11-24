@@ -1,4 +1,4 @@
-package main;
+package synthesijava;
 
 import javax.sound.midi.InvalidMidiDataException;
 import javax.sound.midi.MidiSystem;
@@ -8,6 +8,11 @@ import javax.sound.midi.Sequencer;
 import javax.sound.midi.Synthesizer;
 import javax.sound.midi.Transmitter;
 import javax.swing.*;
+
+import synthesijava.listeners.MidiFileChooser;
+import synthesijava.listeners.StartStopListener;
+import synthesijava.midi.Delayer;
+import synthesijava.midi.Splitter;
 
 import java.awt.BorderLayout;
 import java.awt.Container;
@@ -20,6 +25,7 @@ import java.awt.event.KeyEvent;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.IOException;
 import java.net.URISyntaxException;
 
@@ -116,9 +122,9 @@ public class Main {
 			
 			JMenuItem aboutButton = new JMenuItem("About Synthesijava", KeyEvent.VK_A);
 			aboutMenu.add(aboutButton);
-			aboutButton.addActionListener( (event) -> {
+			aboutButton.addActionListener((event) -> {
 					// https://stackoverflow.com/questions/9119481/how-to-present-a-simple-alert-message-in-java TODO devversion
-					JOptionPane.showMessageDialog(null, "Dev version.\nMade by 4321ba for the university subject Programming 3 at BME.\nUses the Java standard library and the Swing toolkit.", "About", JOptionPane.INFORMATION_MESSAGE);
+					JOptionPane.showMessageDialog(null, "Dev version.\nMade by 1234ab for the university subject Programming 3 at BME.\nUses the Java standard library and the Swing toolkit.", "About", JOptionPane.INFORMATION_MESSAGE);
 				});
 			JMenuItem sourceCodeButton = new JMenuItem("Source code", KeyEvent.VK_S);
 			sourceCodeButton.addActionListener((event) -> {
@@ -164,6 +170,12 @@ public class Main {
             delayer.start();
             Synthesizer synthesizer = MidiSystem.getSynthesizer();
             synthesizer.open();
+            
+            synthesizer.unloadAllInstruments(synthesizer.getDefaultSoundbank());
+            boolean ret =synthesizer.loadAllInstruments(MidiSystem.getSoundbank(new File("/home/balint/Music/wynncraft_soundfont.sf2")));
+            boolean ret2 = synthesizer.isSoundbankSupported(MidiSystem.getSoundbank(new File("/home/balint/Music/wynncraft_soundfont.sf2")));
+            System.out.println(ret+" "+ret2+" "+synthesizer.toString());
+            
             splitter.newTransmitter().setReceiver(synthesizer.getReceiver());
             splitter.newTransmitter().setReceiver(piano);
             

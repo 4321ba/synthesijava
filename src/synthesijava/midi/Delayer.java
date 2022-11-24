@@ -1,4 +1,4 @@
-package main;
+package synthesijava.midi;
 
 import java.util.LinkedHashMap;
 import java.util.LinkedList;
@@ -7,6 +7,8 @@ import java.util.Queue;
 import javax.sound.midi.MidiMessage;
 import javax.sound.midi.Receiver;
 import javax.sound.midi.Transmitter;
+
+import synthesijava.Roll;
 
 public class Delayer extends Thread implements Receiver, Transmitter {
 

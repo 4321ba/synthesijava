@@ -1,4 +1,4 @@
-package main;
+package synthesijava.midi;
 
 import java.util.ArrayList;
 import java.util.List;
