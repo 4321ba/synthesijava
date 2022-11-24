@@ -9,6 +9,7 @@ import java.util.LinkedHashSet;
 import java.util.Set;
 import java.util.SortedSet;
 import java.util.TreeSet;
+import java.util.function.Function;
 
 import javax.sound.midi.MidiMessage;
 import javax.sound.midi.Receiver;
@@ -26,11 +27,12 @@ public class Roll extends JPanel implements Receiver {
 	// the delay between the note appearing at the top and arriving at the bottom
 	public static final long DELAYMS = 2000;
 	
-	// muszáj tudni a Piano-ról, mert ő tudja, hogy bal/jobb oldalról mennyi billentyű van levéve/hozzáadva
-	// és annak függvényében kell kirajzolni
-	private Piano piano;
-	public Roll(Piano p) {
-		piano = p;
+	// muszáj tudni a Piano-nak erről a függvényéről legalább, mert ő tudja, hogy bal/jobb oldalról mennyi billentyű van levéve/hozzáadva
+	// és annak függvényében kell a lefele eső hangokat is kirajzolni
+	// emiatt az egyetlen függvény miatt nem akartam, hogy függőség alakuljon ki az egész Piano-ra
+	private Function<Integer, int[]> getXCoordsForNote;
+	public Roll(Function<Integer, int[]> getXCoordsForNote) {
+		this.getXCoordsForNote = getXCoordsForNote;
 	}
 	
 	SortedSet<Note> notes = new TreeSet<Note>();
@@ -75,7 +77,7 @@ public class Roll extends JPanel implements Receiver {
     	synchronized (notes) {
     		for (Iterator<Note> it = notes.iterator(); it.hasNext();) {
     			Note note = it.next();
-    			boolean isDrawn = note.paint(g, size, piano, upperTimeStamp, lowerTimeStamp);
+    			boolean isDrawn = note.paint(g, size, getXCoordsForNote, upperTimeStamp, lowerTimeStamp);
     			if (!isDrawn)
     				it.remove();
     		}

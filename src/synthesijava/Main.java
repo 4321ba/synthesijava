@@ -25,6 +25,7 @@ import java.awt.event.ActionListener;
 import java.awt.event.KeyEvent;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
+import java.awt.event.WindowListener;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
@@ -112,7 +113,7 @@ public class Main {
 			upwardsDirectionButton.setSelected(true);
 			directionButtonGroup.add(upwardsDirectionButton);
 			modeMenu.add(upwardsDirectionButton);
-			JRadioButtonMenuItem downwardsDirectionButton = new JRadioButtonMenuItem("Notes fall downwards (MIDI file only)");
+			JRadioButtonMenuItem downwardsDirectionButton = new JRadioButtonMenuItem("Notes fall downwards");
 			downwardsDirectionButton.setMnemonic(KeyEvent.VK_D);
 			downwardsDirectionButton.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_D, ActionEvent.CTRL_MASK));
 			directionButtonGroup.add(downwardsDirectionButton);
@@ -145,6 +146,47 @@ public class Main {
 		return menuBar;
 	}
 	
+	static void createAndShowGUI(Sequencer sequencer, Piano piano, Roll roll, WindowListener closingAction) {
+		JFrame frame = new JFrame("Synthesijava");
+        frame.setSize(1280, 720);
+        frame.setMinimumSize(new Dimension(320, 240));
+        frame.setJMenuBar(createMenuBar(sequencer, piano));
+        frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        frame.addWindowListener(closingAction);
+
+        // https://docs.oracle.com/javase/tutorial/uiswing/layout/box.html
+        // https://docs.oracle.com/javase/tutorial/uiswing/examples/layout/BoxLayoutDemoProject/src/layout/BoxLayoutDemo.java
+        // https://stackoverflow.com/questions/19745559/java-swing-boxlayout-having-panels-of-different-sizes-ratio-to-each-other
+        // https://stackoverflow.com/questions/2432839/what-is-the-relation-between-contentpane-and-jpanel
+        // https://docs.oracle.com/javase/tutorial/uiswing/layout/gridbag.html
+        Container pane = frame.getContentPane();
+        pane.setLayout(new GridBagLayout());
+        
+        GridBagConstraints rollConstraint = new GridBagConstraints();
+        rollConstraint.weightx = 1.0;
+        rollConstraint.weighty = 7.0;
+        rollConstraint.fill = GridBagConstraints.BOTH;
+        rollConstraint.gridx = 0;
+        rollConstraint.gridy = 0;
+        pane.add(roll, rollConstraint);
+        GridBagConstraints pianoConstraint = new GridBagConstraints();
+        pianoConstraint.weightx = 1.0;
+        pianoConstraint.weighty = 1.0;
+        pianoConstraint.fill = GridBagConstraints.BOTH;
+        pianoConstraint.gridx = 0;
+        pianoConstraint.gridy = 1;
+        pane.add(piano, pianoConstraint);
+
+        // https://stackoverflow.com/questions/57948299/why-does-my-custom-swing-component-repaint-faster-when-i-move-the-mouse-java
+        /* Update the scene every 17 milliseconds. */
+        Timer timer = new Timer(17, (e) -> pane.repaint());
+        timer.start();
+        
+        frame.setVisible(true);
+        piano.grabFocus(); // hogy lehessen rajta játszani
+	}
+	
+	
 	public static void main(String[] args) {
 		// bekapcsolni a hardware accelerationt, mert linuxon valamiért alapértelmezetten nincs
 		// https://stackoverflow.com/questions/41001623/java-animation-programs-running-jerky-in-linux/41002553#41002553https://stackoverflow.com/questions/41001623/java-animation-programs-running-jerky-in-linux/41002553#41002553
@@ -164,7 +206,7 @@ public class Main {
             //trin.setReceiver(sequencer.getReceiver());
             Transmitter transmitter = sequencer.getTransmitter();
             Piano piano = new Piano();
-    		Roll roll = new Roll(piano);
+    		Roll roll = new Roll(piano::getXCoordsForNote);
     		transmitter.setReceiver(roll);
             Transmitter seq_transmitter2 = sequencer.getTransmitter();
             Delayer delayer = new Delayer();
@@ -187,53 +229,18 @@ public class Main {
             
 
         	//trin.setReceiver(roll);
-            // TODO thread safety???
-            JFrame frame = new JFrame("Synthesijava");
-            frame.setSize(1280, 720);
-            frame.setMinimumSize(new Dimension(320, 240));
-            frame.setJMenuBar(createMenuBar(sequencer, piano));
-            frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-
-            // https://docs.oracle.com/javase/tutorial/uiswing/layout/box.html
-            // https://docs.oracle.com/javase/tutorial/uiswing/examples/layout/BoxLayoutDemoProject/src/layout/BoxLayoutDemo.java
-            // https://stackoverflow.com/questions/19745559/java-swing-boxlayout-having-panels-of-different-sizes-ratio-to-each-other
-            // https://stackoverflow.com/questions/2432839/what-is-the-relation-between-contentpane-and-jpanel
-            // https://docs.oracle.com/javase/tutorial/uiswing/layout/gridbag.html
-            Container pane = frame.getContentPane();
-            pane.setLayout(new GridBagLayout());
+            // TODO thread safety??? swingutilities.invokelater
+          //TODO nem szabad elvileg 2 transmitternek uazt a receivert hívogatnia
             
+
             KeyboardMIDIInput kmi = new KeyboardMIDIInput();
             piano.addKeyListener(kmi);
-            
-            GridBagConstraints rconstraint = new GridBagConstraints();
-            rconstraint.weightx = 1.0;
-            rconstraint.weighty = 7.0;
-            rconstraint.fill = GridBagConstraints.BOTH;
-            rconstraint.gridx = 0;
-            rconstraint.gridy = 0;
-            pane.add(roll, rconstraint);
-            GridBagConstraints pconstraint = new GridBagConstraints();
-            pconstraint.weightx = 1.0;
-            pconstraint.weighty = 1.0;
-            pconstraint.fill = GridBagConstraints.BOTH;
-            pconstraint.gridx = 0;
-            pconstraint.gridy = 1;
-            pane.add(piano, pconstraint);
-
-            frame.setVisible(true);
-            piano.grabFocus();
-
-//            Synthesizer defs = MidiSystem.getSynthesizer();
-//            Receiver defSynth = defs.getReceiver();
-//            defs.open();
-//            System.out.println(defs.isOpen());
-//            Splitter spl = new Splitter();
-//            kmi.setReceiver(spl);//TODO nem szabad elvileg 2 transmitternek uazt a receivert hívogatnia
             kmi.setReceiver(roll);
             
             // https://stackoverflow.com/questions/5824049/running-a-method-when-closing-the-program
-            // tudom hogy csúnya, de ezért a 3 sorért nem szeretnék egy új fájlt létrehozni, és ez logikailag is ide illik
-            frame.addWindowListener(new WindowAdapter() {
+            // tudom hogy csúnya, de ezért a 3 sorért nem szeretnék egy új fájlt létrehozni, és ez logikailag ide illik
+            // a megnyitások után
+            WindowListener closingAction = new WindowAdapter() {
                 public void windowClosing(WindowEvent we) {
                 	//System.out.println("záródunk");
                 	//trin.close();
@@ -242,23 +249,10 @@ public class Main {
                 	seq_transmitter2.close();
                 	delayer.close();
                 }
-            });
+            };
+            //TODO biztos minden be van zárva??
+            SwingUtilities.invokeLater(()->Main.createAndShowGUI(sequencer, piano, roll, closingAction));
             
-            // https://stackoverflow.com/questions/57948299/why-does-my-custom-swing-component-repaint-faster-when-i-move-the-mouse-java
-            /* Update the scene every 40 milliseconds. */
-            Timer timer = new Timer(17, (e) -> pane.repaint());
-            timer.start();
-            
-            //while (true)
-            //	roll.repaint();
-            
-//			while(sequencer.isRunning()) {
-//				frame.getContentPane().repaint();
-//				//r.repaint();
-//			}
-//    		tr.close();
-//    		
-//            sequencer.close();
         }
         catch (Exception ex) {
         	

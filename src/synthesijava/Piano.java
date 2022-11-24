@@ -54,16 +54,9 @@ public class Piano extends JPanel implements Receiver, ActionListener {
 	}
 	@Override public void close() { }
 
-	static boolean isBlackNote(int note) {
-		return note % 12 == 1 || note % 12 == 3 || note % 12 == 6 || note % 12 == 8 || note % 12 == 10;
-	}
-	static String getNoteName(int note) {
-		final String[] names = "C,C#,D,D#,E,F,F#,G,G#,A,A#,B".split(",");
-		return names[note % 12];
-	}
 	
 	static double getLerpWeight(int blackNote) {
-		switch (getNoteName(blackNote)) {
+		switch (Note.getNoteName(blackNote)) {
 			case "C#": return  1/3.0;
 			case "D#": return  2/3.0;
 			case "F#": return  1/4.0;
@@ -91,7 +84,7 @@ public class Piano extends JPanel implements Receiver, ActionListener {
 	    	int[] xCoords = getXCoordsForNote(absoluteNote);
 	    	int beginPixel = xCoords[0];
 	    	int endPixel = xCoords[1];
-	    	if (!isBlackNote(absoluteNote)) {
+	    	if (!Note.isBlackNote(absoluteNote)) {
     		    g.setColor(Color.WHITE);
 	    		g.setColor(keyColors[absoluteNote]); // null arg is silently ignored
 	    		g.fillRect(beginPixel, 0, endPixel - beginPixel, size.height - 1);
@@ -102,10 +95,10 @@ public class Piano extends JPanel implements Receiver, ActionListener {
 	    	int beginPixel = xCoords[0];
 	    	int endPixel = xCoords[1];
 		    g.setColor(Color.BLACK);
-		    String noteName = getNoteName(absoluteNote);
+		    String noteName = Note.getNoteName(absoluteNote);
 	    	if (noteName.equals("C") || noteName.equals("F"))
 	    		g.drawLine(beginPixel, 0, beginPixel, size.height - 1);
-	    	if (isBlackNote(absoluteNote)) {
+	    	if (Note.isBlackNote(absoluteNote)) {
 	    		int blackLineXCoord = getBlackLineXCoord(absoluteNote);
 	    		g.drawLine(blackLineXCoord, 0, blackLineXCoord, size.height - 1);
 	    		g.fillRect(beginPixel, 0, endPixel - beginPixel, (int)(size.height * 0.7));
@@ -127,9 +120,9 @@ public class Piano extends JPanel implements Receiver, ActionListener {
     	int relativeNote = note - lowestNoteDisplayed;
     	int beginPixel = ((size.width-1) * relativeNote) / noteCount; // begin x coord for the note
     	int endPixel = ((size.width-1) * (relativeNote + 1)) / noteCount; // end x coord for note
-    	if (isBlackNote(note - 1))
+    	if (Note.isBlackNote(note - 1))
     		beginPixel = getBlackLineXCoord(note - 1);
-    	if (isBlackNote(note + 1))
+    	if (Note.isBlackNote(note + 1))
     		endPixel = getBlackLineXCoord(note + 1);
 		return new int[] {beginPixel, endPixel};
 	}

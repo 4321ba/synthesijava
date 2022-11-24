@@ -43,8 +43,9 @@ public class Splitter {
 		// mások ezt fogják hívni, és mindent ami itt jön, akarjuk továbbítani az összes innertransmitter.r felé
 		@Override
 		public void send(MidiMessage message, long timeStamp) {
-			for (Transmitter transmitter : transmitters) {
-				transmitter.getReceiver().send(message, timeStamp);
+			synchronized (transmitters) {
+				for (Transmitter transmitter : transmitters)
+					transmitter.getReceiver().send(message, timeStamp);
 			}
 		}
 		@Override
