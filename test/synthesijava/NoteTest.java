@@ -9,6 +9,10 @@ import java.awt.Color;
 
 import org.junit.Test;
 
+/**
+ * teszteli a Note egyes függvényeit, és a Piano.getLerpWeight-et is
+ *
+ */
 public class NoteTest {
 	/**
 	 * teszteli azt, hogy a zongorabillentyű tényleg fekete-e
@@ -85,5 +89,13 @@ public class NoteTest {
 		assertEquals(3/4.0, Piano.getLerpWeight(66), 0); // F#
 		assertEquals(1/2.0, Piano.getLerpWeight(68), 0); // G#
 		assertEquals(1/4.0, Piano.getLerpWeight(70), 0); // A#
+	}
+	/**
+	 * teszteli, hogy a fekete zongorabillentyű alatti fekete csík x koordinátájának súlyának lekérdezése
+	 * nem fekete hang esetén exceptiont dob
+	 */
+	@Test(expected=IllegalArgumentException.class)
+	public void pianoKeyLerpIllegal() {
+		Piano.getLerpWeight(60); // C
 	}
 }

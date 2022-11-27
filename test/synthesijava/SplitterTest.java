@@ -16,8 +16,16 @@ import org.junit.Test;
 
 import synthesijava.midi.Splitter;
 
+/**
+ * teszteli a splittert, egy komplex tesztesetből áll
+ */
 public class SplitterTest {
 	
+	/**
+	 * a teszthez szükséges receiver, ami naplózza, hogy miket kapott
+	 * hogy később össze lehessen hasonlítani, hogy tényleg jó dolgokat kapott-e
+	 *
+	 */
 	static private class TestReceiver implements Receiver {
 		public List<MidiMessage> ml = new ArrayList<>();
 		public List<Long> tl = new ArrayList<>();
@@ -32,6 +40,9 @@ public class SplitterTest {
 		public void close() { }
 	}
 	
+	/**
+	 * létrehoz egy splittert két bemenettel és két kimenettel, és teszteli, hogy az alagút mindkét végén kijön-e a vonat
+	 */
 	@Test
 	public void splitter() throws InvalidMidiDataException {
 		Splitter s = new Splitter();

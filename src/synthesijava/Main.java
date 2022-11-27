@@ -35,9 +35,20 @@ import java.awt.event.WindowListener;
 import java.io.IOException;
 import java.net.URISyntaxException;
 
+/**
+ * itt található a belépési pont, és a gui felépítése, nem példányosítandó (csak static függvények halmaza)
+ */
 public class Main {
 
-	static JMenuBar createMenuBar(Sequencer sequencer, Piano piano, DirectionChangeListener dCL, ExternalDeviceConnector eDC) {
+	/**
+	 * megcsinálja a menübárt
+	 * @param sequencer a sequencer amelyiket a start/stop gomb megállítsa ill a midifájlválasztó a midifájlt beletegye
+	 * @param piano a zongora példány, amelyiknek a menü gombjai a méretét állítsák, illetve elmentse és visszatöltse
+	 * @param dCL a listener amelyik a felfele/lefele esés megváltoztatását és beállítását végzi
+	 * @param eDC a listener amelyik a külső midi billentyűzet csatlakoztatásáért felel
+	 * @return elkészített menübár
+	 */
+	private static JMenuBar createMenuBar(Sequencer sequencer, Piano piano, DirectionChangeListener dCL, ExternalDeviceConnector eDC) {
         // https://docs.oracle.com/javase/tutorial/uiswing/components/menu.html
 
 		JMenuBar menuBar = new JMenuBar();
@@ -138,8 +149,8 @@ public class Main {
 			JMenuItem aboutButton = new JMenuItem("About Synthesijava", KeyEvent.VK_A);
 			aboutMenu.add(aboutButton);
 			aboutButton.addActionListener((event) -> {
-					// https://stackoverflow.com/questions/9119481/how-to-present-a-simple-alert-message-in-java TODO devversion
-					JOptionPane.showMessageDialog(null, "Dev version.\nMade by 1234ab for the university subject Programming 3 at BME.\nUses the Java standard library and the Swing toolkit.", "About", JOptionPane.INFORMATION_MESSAGE);
+					// https://stackoverflow.com/questions/9119481/how-to-present-a-simple-alert-message-in-java
+					JOptionPane.showMessageDialog(null, "Release version.\nMade by 1234ab for the university subject Programming 3 at BME.\nUses the Java standard library and the Swing toolkit.", "About", JOptionPane.INFORMATION_MESSAGE);
 				});
 			JMenuItem sourceCodeButton = new JMenuItem("Source code", KeyEvent.VK_S);
 			sourceCodeButton.addActionListener((event) -> {
@@ -156,7 +167,10 @@ public class Main {
 		return menuBar;
 	}
 	
-	static void createAndShowGUI(Sequencer sequencer, Piano piano, Roll roll, DirectionChangeListener dCL, ExternalDeviceConnector eDC, WindowListener closingAction) {
+	/**
+	 * megcsinálja a gui-t, és megjeleníti
+	 */
+	private static void createAndShowGUI(Sequencer sequencer, Piano piano, Roll roll, DirectionChangeListener dCL, ExternalDeviceConnector eDC, WindowListener closingAction) {
 		JFrame frame = new JFrame("Synthesijava");
         frame.setSize(1280, 720);
         frame.setMinimumSize(new Dimension(320, 240));
@@ -196,7 +210,9 @@ public class Main {
         piano.grabFocus(); // hogy lehessen rajta játszani
 	}
 	
-	
+	/**
+	 * a program belépési pontja, létrehozza a szükséges MIDI összekötéseket (lásd pdf dokumentáció), és meghívja a gui elkészítését
+	 */
 	public static void main(String[] args) {
 		// bekapcsolni a hardware accelerationt, mert linuxon valamiért alapértelmezetten nincs
 		// https://stackoverflow.com/questions/41001623/java-animation-programs-running-jerky-in-linux/41002553#41002553https://stackoverflow.com/questions/41001623/java-animation-programs-running-jerky-in-linux/41002553#41002553

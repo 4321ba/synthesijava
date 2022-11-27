@@ -10,7 +10,13 @@ import javax.sound.midi.Receiver;
 import javax.sound.midi.ShortMessage;
 import javax.sound.midi.Transmitter;
 
+/**
+ * Kezeli a Piano bemenetét (KeyListener): átalakítja MIDI eventekké és kibocsátja (Transmitter)
+ */
 public class KeyboardMIDIInput implements Transmitter, KeyListener {
+	/**
+	 * az adott hanghoz (int) tartozó billentyű (char), magyar kiosztás van hardcodeolva
+	 */
 	static final char[] noteToKey = new char[Roll.MAX_PITCHES];
 	static {
 		noteToKey[43] = '0'; // G
@@ -57,13 +63,20 @@ public class KeyboardMIDIInput implements Transmitter, KeyListener {
 		noteToKey[84] = 'á';
 		noteToKey[85] = 'ű';
 	}
+	/**
+	 * ugyanaz mint fent csak fordítva: adott karakterhez tartozó hang (int)
+	 */
 	static final Map<Character, Integer> keyToNote = new HashMap<>();
 	static {
 		for (int note = 0; note < Roll.MAX_PITCHES; ++note)
 			if (noteToKey[note] != '\0')
 				keyToNote.put(noteToKey[note], note);
 	}
-	//TODO többi osztálynál is privát tagok
+
+	/**
+	 * eltárolja, hogy a hang le van-e nyomva, ez azért szükséges, mert nem tudjuk, hogy egy újabb lenyomás,
+	 * vagy csak echo történt: echo esetén nem küldünk új midieventet
+	 */
 	private boolean[] isNotePressed = new boolean[Roll.MAX_PITCHES];
 	
 
@@ -71,6 +84,9 @@ public class KeyboardMIDIInput implements Transmitter, KeyListener {
 	@Override
 	public void keyTyped(KeyEvent e) { }
 
+	/**
+	 * ha a fent található karaktert kaptunk és nem echo, akkor note on eventet bocsátunk ki
+	 */
 	@Override
 	public void keyPressed(KeyEvent e) {
 		if (e.getModifiersEx() != 0)
@@ -90,6 +106,9 @@ public class KeyboardMIDIInput implements Transmitter, KeyListener {
 		}
 	}
 
+	/**
+	 * ha a fent található karaktert kaptunk és le van nyomva, akkor felengedjük: note off eventet adunk
+	 */
 	@Override
 	public void keyReleased(KeyEvent e) {
 		char actual = Character.toLowerCase((char)e.getExtendedKeyCode());

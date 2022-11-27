@@ -9,13 +9,18 @@ import javax.sound.midi.MidiMessage;
 import javax.sound.midi.Receiver;
 import javax.sound.midi.ShortMessage;
 import javax.swing.JPanel;
-
+/**
+ * a megjelenített zongorabillentyűkért felelős, meg azok színezéséért (Receiver: midi eventeket itt kap)
+ * ActionListener, mert ő valósítja meg a saját billentyűinek az átállítását a menüre kattintás hatására
+ */
 public class Piano extends JPanel implements Receiver, ActionListener {
 	
 	private int lowestNoteDisplayed = 0;
 	private int highestNoteDisplayed = Roll.MAX_PITCHES; // this-1 is actually the last one displayed
 
-	// operator= cpp-ból, beolvasáshoz
+	/**
+	 * operator= cpp-ból, deszerializálás utáni betöltéshez (*piano = *newPiano, dereferencia szerinti értékadás)
+	 */
 	public Piano operatorEQ(Piano other) {
 		this.lowestNoteDisplayed = other.lowestNoteDisplayed;
 		this.highestNoteDisplayed = other.highestNoteDisplayed;
@@ -23,16 +28,29 @@ public class Piano extends JPanel implements Receiver, ActionListener {
 	}
 	
 	private static final long serialVersionUID = 1L;
-	
-	// ez ilyen félig-csúnya megoldás, mert ha egy csatornán még szól hang miközben egy másikon épp befejeződött, azt így nem fogja figyelembe venni
-	private transient Color[] keyColors = new Color[Roll.MAX_PITCHES];
-	// Ezt fogja meghívni az összekötött transzmitter, ha küldeni akar nekünk valamit
+	/**
+	 * eltárolja az adott billentyű(0..127)-höz tartozó színt, amit ki kell rajzolni
+	 * 
+	 * ez ilyen félig-csúnya megoldás, mert ha egy csatornán még szól hang miközben egy másikon épp befejeződött, azt így nem fogja figyelembe venni
+	 * mivel csak egyszerre egy színt tud egy hangmagassághoz eltárolni
+	 * 
+	 * lehet, hogy kellene rá szinkronizálni, de igazából csak pointer írás/olvasás történik konkurensen, szóval elég kell legyen a volatile
+	 * maga a tömbre mutató pointer is volatile kéne legyen, meg a tömbben levő összes pointer, de jó lesz ez most így
+	 * 
+	 * transient mert nem akarjuk szerializálni
+	 */
+	volatile private transient Color[] keyColors = new Color[Roll.MAX_PITCHES];
+	/**
+	 * ezt fogja meghívni az összekötött transzmitter, ha küldeni akar nekünk valamit
+	 * ekkor kell a keyColors ban a színt beállítani
+	 */
 	@Override public void send(MidiMessage message, long timeStamp) {
 		if (!(message instanceof ShortMessage))
 			return;
 		ShortMessage sm = (ShortMessage) message;
 		// control change 123 means toggle all notes off: this is emitted by the synthesizer when stopping the playback
 		// https://www.whippedcreamsounds.com/midi-cc-list/
+		// azért, hogy megállításkor biztosan ne legyen a billentyű színe bebugolva (menet közbeni irányváltásnál lehetnek problémák)
 		if (sm.getCommand() == ShortMessage.CONTROL_CHANGE && sm.getData1()  == 123 && sm.getChannel() == 0)
 			keyColors = new Color[Roll.MAX_PITCHES];
 		if (sm.getCommand() != ShortMessage.NOTE_ON && sm.getCommand() != ShortMessage.NOTE_OFF)
@@ -47,7 +65,12 @@ public class Piano extends JPanel implements Receiver, ActionListener {
 	}
 	@Override public void close() { }
 
-	
+	/**
+	 * visszaadja, hogy a fekete zongorabillentyű alatti fekete csík x koordinátáját hogy kapjuk meg,
+	 * hogy kell súlyozni a két végpontot
+	 * @param blackNote hangmagasság/pitch/note
+	 * @return súly
+	 */
 	static double getLerpWeight(int blackNote) {
 		switch (Note.getNoteName(blackNote)) {
 			case "C#": return  2/3.0;
@@ -58,6 +81,11 @@ public class Piano extends JPanel implements Receiver, ActionListener {
 		}
 		throw new IllegalArgumentException("BlackNote is not black.");
 	}
+	/**
+	 * visszaadja a fekete zongorabillentyű alatti fekete csík x koordinátáját
+	 * @param blackNote hangmagasság/pitch/note
+	 * @return x koordináta
+	 */
 	int getBlackLineXCoord(int blackNote) {
 	    Dimension size = getSize();
 	    int noteCount = highestNoteDisplayed - lowestNoteDisplayed;
@@ -67,7 +95,9 @@ public class Piano extends JPanel implements Receiver, ActionListener {
 		double lerpWeight = getLerpWeight(blackNote);
 		return (int)((1 - lerpWeight) * beginPixel + lerpWeight * endPixel + 0.5); // +0.5 for rounding
 	}
-	
+	/**
+	 * kirajzolja a zongorát, megfelelően színezve, és a KeyboardMIDIInputban specifikált betűket ráírva a megfelelő hangokra
+	 */
 	@Override
 	protected void paintComponent(Graphics g) {
 	    super.paintComponent(g);
@@ -109,6 +139,10 @@ public class Piano extends JPanel implements Receiver, ActionListener {
 	    g.drawRect(0, 0, size.width - 1, size.height - 1);
 	}
 	
+	/**
+	 * visszaadja az adott hanghoz tartozó kezdeti és végső x koordinátát
+	 * beleszámolja a fehér hangoknál azt az extra kiterjedést is, ami a fekete billentyűk alá benyúlás miatt van
+	 */
 	public int[] getXCoordsForNote(int note) {
 	    Dimension size = getSize();
 	    int noteCount = highestNoteDisplayed - lowestNoteDisplayed;
@@ -121,7 +155,9 @@ public class Piano extends JPanel implements Receiver, ActionListener {
     		endPixel = getBlackLineXCoord(note + 1);
 		return new int[] {beginPixel, endPixel};
 	}
-	
+	/**
+	 * megkapja az actioneventeket a menüben kattintgatásról, amelyek miatt neki a hangok kiterjedését változtatnia kell
+	 */
 	@Override
 	public void actionPerformed(ActionEvent e) {
 		// https://www.javatpoint.com/java-switch-with-string
@@ -141,7 +177,7 @@ public class Piano extends JPanel implements Receiver, ActionListener {
 	        default:
 	        	throw new RuntimeException("Piano got an unknown action " + e.getActionCommand());
         }
-        repaint();
+        repaint(); // igazából nem kellene, mert úgyis 60fps-sel újrafrissíti
     }
 	
 }

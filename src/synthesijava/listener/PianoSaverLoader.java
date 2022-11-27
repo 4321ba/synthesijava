@@ -13,17 +13,28 @@ import javax.swing.JOptionPane;
 import javax.swing.filechooser.FileNameExtensionFilter;
 
 import synthesijava.Piano;
-
+/**
+ * a piano szerializálásáért és deszerializálásáért felel
+ */
 public class PianoSaverLoader implements ActionListener {
 
-	// forráskommentek ugyanúgy, mint a StartStopListenernél
-	JFileChooser fileChooser = new JFileChooser();
-	Piano piano;
+	// forráskommentek/webcímek ugyanúgy, mint a StartStopListenernél
+	private JFileChooser fileChooser = new JFileChooser();
+	private Piano piano;
+	
+	/**
+	 * tudnunk kell az aktuálisan bedrótozott piano-ról, amit lementünk, betöltéskor meg operatorEQ-val ennek adunk értéket
+	 */
 	public PianoSaverLoader(Piano p) {
 		fileChooser.setFileFilter(new FileNameExtensionFilter("Piano properties file (*.piano)", "piano"));
 		piano = p;
 	}
 
+	/**
+	 * megcsináljuk a kért műveletet, hiba esetén jelezzük a felhasználónak popup segítségével
+	 * trükk: a beolvasott piano objektumot nem egy-az-egybe drótozzuk be az előző helyére, hanem
+	 * dereferálva végezzük az értékadást (*regip=*ujp, operatorEQ függvény)
+	 */
 	@Override public void actionPerformed(ActionEvent event) {
 		if ("Load piano settings".equals(event.getActionCommand())) {
 			if (fileChooser.showOpenDialog(null) == JFileChooser.APPROVE_OPTION) {

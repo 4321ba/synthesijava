@@ -10,12 +10,18 @@ import javax.sound.midi.Sequencer;
 import javax.swing.JFileChooser;
 import javax.swing.JOptionPane;
 import javax.swing.filechooser.FileNameExtensionFilter;
-
+/**
+ * a gui kérésére megkéri a felhasználót, hogy válasszon egy midi fájlt, és azt megpróbálja megetetni a sequencerrel
+ */
 public class MidiFileChooser implements ActionListener {
 
 	// https://www.javatpoint.com/instance-initializer-block
-	JFileChooser fileChooser = new JFileChooser();
-	Sequencer sequencer;
+	private JFileChooser fileChooser = new JFileChooser();
+	private Sequencer sequencer;
+	/**
+	 * ctor
+	 * @param s a sequencer, amivel a midi fájlt megpróbáljuk majd megetetni
+	 */
 	public MidiFileChooser(Sequencer s) {
 		fileChooser.setFileFilter(new FileNameExtensionFilter("Standard MIDI File (*.mid)", "mid"));
 		sequencer = s;
@@ -24,6 +30,10 @@ public class MidiFileChooser implements ActionListener {
 	// https://docs.oracle.com/javase/tutorial/uiswing/components/filechooser.html
 	// https://stackoverflow.com/questions/891380/java-anonymous-class-that-implements-actionlistener
 	// https://docs.oracle.com/javase/tutorial/uiswing/events/actionlistener.html
+	/**
+	 * midifájl betöltési kérelemre hívódik meg, megnyitja a file choosert, és siker esetén megpróbálja elindítani a midi fájlt
+	 * kudarc esetén jelez a felhasználónak
+	 */
 	@Override public void actionPerformed(ActionEvent event) {
 		// a file chooser megjelenítése:
         if (fileChooser.showOpenDialog(null) == JFileChooser.APPROVE_OPTION) {
