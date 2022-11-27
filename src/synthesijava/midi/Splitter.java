@@ -10,8 +10,6 @@ import javax.sound.midi.Transmitter;
 public class Splitter {
 
 	private List<Transmitter> transmitters = new ArrayList<Transmitter>();
-	//private List<Receiver> receivers = new ArrayList<Receiver>();
-	
 	
 	public Transmitter newTransmitter() {
 		Transmitter t = new InnerTransmitter();
@@ -20,15 +18,9 @@ public class Splitter {
 		}
 		return t;
 	}
-	public void removeTransmitter(Transmitter t) {
-		synchronized (transmitters) {
-			transmitters.remove(t);
-		}
-	}
 
 	public Receiver newReceiver() {
 		Receiver r = new InnerReceiver(transmitters);
-		//receivers.add(r);
 		return r;
 	}
 	

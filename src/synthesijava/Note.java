@@ -41,7 +41,7 @@ public class Note implements Comparable<Note> {
 		//inverse lerp and lerp from
         //https://www.gamedev.net/tutorials/programming/general-and-gameplay-programming/inverse-lerp-a-super-useful-yet-often-overlooked-function-r5230/
         double ratio = (value - input_min) / (double)(input_max - input_min);
-        return (int) ((1.0 - ratio) * output_min + ratio * output_max + 0.5);
+        return (int) Math.round((1.0 - ratio) * output_min + ratio * output_max);
 	}
 	
 	// visszaadja, hogy ki kellett-e egyáltalán rajzolni, vagy már nincs is a képernyőn

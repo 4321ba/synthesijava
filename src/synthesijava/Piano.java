@@ -50,13 +50,13 @@ public class Piano extends JPanel implements Receiver, ActionListener {
 	
 	static double getLerpWeight(int blackNote) {
 		switch (Note.getNoteName(blackNote)) {
-			case "C#": return  1/3.0;
-			case "D#": return  2/3.0;
-			case "F#": return  1/4.0;
+			case "C#": return  2/3.0;
+			case "D#": return  1/3.0;
+			case "F#": return  3/4.0;
 			case "G#": return  2/4.0;
-			case "A#": return  3/4.0;
+			case "A#": return  1/4.0;
 		}
-		return 1/2.0;
+		throw new IllegalArgumentException("BlackNote is not black.");
 	}
 	int getBlackLineXCoord(int blackNote) {
 	    Dimension size = getSize();
@@ -65,7 +65,7 @@ public class Piano extends JPanel implements Receiver, ActionListener {
     	int beginPixel = ((size.width-1) * relativeNote) / noteCount; // begin x coord for the note
     	int endPixel = ((size.width-1) * (relativeNote + 1)) / noteCount; // end x coord for note
 		double lerpWeight = getLerpWeight(blackNote);
-		return (int)(lerpWeight * beginPixel + (1 - lerpWeight) * endPixel + 0.5); // +0.5 for rounding
+		return (int)((1 - lerpWeight) * beginPixel + lerpWeight * endPixel + 0.5); // +0.5 for rounding
 	}
 	
 	@Override
