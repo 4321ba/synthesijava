@@ -35,7 +35,40 @@ Lesz egy KeyboardMIDIInput nevű osztály, ami a Piano eventjeit dolgozza fel (p
 
 Lesz egy késleltető osztály (ha nem találok hasonlót a standard könyvtárban), ami receivel MIDI üzeneteket, és pl. 3 másodperc múlva transmittálja őket. Ez ahhoz kell, hogy a hang ténylegesen akkor szólaljon meg, amikor leért a zongora billentyűihez, viszont a Roll már meg tudja korábban kapni ugyanazt az üzenetet, hogy ki tudja időben rajzolni.
 
-# Terv
+# Programozói dokumentáció
+
+## Függvények dokumentációja
+
+Javadoc kommentekként, a kódban.
 
 ## MIDI Transmitterek és Receiverek összekötése
+Az ábrán a bal oldali Splittert hívjuk a kódban leftSplitter-nek, és a jobb oldalit rightSplitter-nek (amik között kell a Delayert betenni illetve kivenni).
+
 ![Dobozok nyilakkal összekötve](MIDI_devices.drawio.png)
+
+## Osztálydiagram
+
+Az osztálydiagramon nem jelölöm a java beépített osztályait (így is elég nagy), így az azokat tartalmazó osztályokban a könyvtári osztályok attribútumokként fognak megjelenni. Behúztam egy pár függőséget, de nem az összeset, a függőségek pontos felderítését ajánlatosabb a kód elolvasásával végezni. A beépített osztályokat is asszociációval jelöltem, mivel a modellezőeszközben nem találtam a (+)-os jelölést.
+
+![Osztálydiagram](class_diagram.png)
+
+# Felhasználói dokumentáció
+
+
+A program MIDI vizualizációjára képes. A MIDI egy olyan fájlformátum, amiben nem hanghullámok vannak eltárolva, hanem pl. zongora billentyű lenyomás és felengedés. Ez lehetővé tesz olyan vizualizációt, mintha egy tégladarab esne lefelé, vagy felfelé egyenes vonalú egyenletes mozgással, egy zongora billentyűi felé, vagy felől. Amikor az egyes hanghoz tartozó tégladarab hozzáér a zongorához, akkor kezdődik a hang lejátszása, és amikor a vége is túlesett a zongorán, akkor hagyja abba a hang lejátszását. Ilyen program például eredetileg a [Synthesia](https://synthesiagame.com/), ennek egyszerűsített rekreációja a Synthesijava.
+
+Az adott menüpontok érhetők el a programban (a shortcutot a menü kiírja):
+
+- File > Open MIDI: A felhasználó be tud tölteni MIDI fájlt, hogy azt a program automatikusan lejátssza.
+- Playback > Connect / Disconnect External MIDI Device: A számítógépre dugott (külső) MIDI billentyűzethez hozzá lehet csatlakozni a programmal, és akkor az fog látszódni, amit ott real-time játszunk.
+- A számítógép billentyűzetén is lehetséges, egyből a programból, hangokat lejátszani, ezt a zongorára kiírt billentyűk lenyomásával lehet.
+- Mode menü: Az esés irányát itt lehet változtatni.
+- Piano menü: Lehetőség van a zongora billentyűinek a számát növelni és csökkenteni, bal és jobb oldalon.
+- File > Load / Save piano settings: A zongora billentyűk aktuális állapotát el lehet menteni egy saját fájlformátumú fájlba, és onnan vissza lehet tölteni.
+- Playback > Start / Stop: A MIDI fájl lejátszását megállítja, vagy folytatja. Sajnos a képernyő nem "fagy meg" ennek hatására.
+
+Az ablak szinte tetszőlegesen átméretezhető.
+
+Hiba esetén popup ablak tájékoztatja a felhasználót a hibáról (általában).
+
+
